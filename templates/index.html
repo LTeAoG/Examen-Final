@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Inventario y Ventas</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fuente Medieval -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Cinzel', serif;
+            background-image: url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1920&q=80');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+        }
+        
+        .medieval-title {
+            font-family: 'MedievalSharp', cursive;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
+        }
+        
+        .glass-panel {
+            background: rgba(20, 15, 30, 0.85);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(218, 165, 32, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        
+        .btn-medieval {
+            background: linear-gradient(145deg, #8b4513, #654321);
+            border: 2px solid #DAA520;
+            transition: all 0.3s ease;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+        
+        .btn-medieval:hover {
+            background: linear-gradient(145deg, #a0522d, #8b4513);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(218, 165, 32, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(145deg, #8b0000, #660000);
+            border: 2px solid #ff4444;
+        }
+        
+        .btn-danger:hover {
+            background: linear-gradient(145deg, #a00000, #8b0000);
+        }
+        
+        .stat-card {
+            background: linear-gradient(145deg, rgba(139, 69, 19, 0.6), rgba(101, 67, 33, 0.6));
+            border: 2px solid rgba(218, 165, 32, 0.6);
+        }
+        
+        .table-medieval {
+            background: rgba(30, 20, 40, 0.7);
+        }
+        
+        .table-medieval th {
+            background: rgba(139, 69, 19, 0.8);
+            border-bottom: 2px solid #DAA520;
+        }
+        
+        .table-medieval tr:hover {
+            background: rgba(218, 165, 32, 0.1);
+        }
+        
+        .gold-text {
+            color: #DAA520;
+        }
+        
+        .music-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        input, select, textarea {
+            background: rgba(30, 20, 40, 0.9) !important;
+            border: 1px solid rgba(218, 165, 32, 0.5) !important;
+            color: #DAA520 !important;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: #DAA520 !important;
+            outline: none !important;
+            box-shadow: 0 0 10px rgba(218, 165, 32, 0.3) !important;
+        }
+        
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Control de Música -->
+    <div class="music-control">
+        <button id="musicToggle" class="btn-medieval px-4 py-2 rounded-full text-white font-bold">
+            🎵 Música
+        </button>
+        <audio id="bgMusic" loop preload="auto">
+            <source src="/static/audio/medieval.mp3" type="audio/mpeg">
+            Tu navegador no soporta el elemento de audio.
+        </audio>
+    </div>
+
+    <!-- Header -->
+    <header class="glass-panel py-6 mb-8">
+        <div class="container mx-auto px-4">
+            <h1 class="medieval-title text-5xl text-center text-yellow-400 mb-2">
+                ⚔️ Gestión de Inventario y Ventas ⚔️
+            </h1>
+            <p class="text-center text-yellow-200 text-lg">Sistema Medieval de Gestión Comercial</p>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 pb-20">
+        <!-- Presupuesto -->
+        <div class="glass-panel rounded-lg p-6 mb-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="text-xl font-bold text-yellow-400">Presupuesto Actual</h3>
+                    <p class="text-3xl font-bold gold-text mt-2" id="presupuesto-display">0.00</p>
+                </div>
+                <button onclick="mostrarModalPresupuesto()" class="btn-medieval px-6 py-3 rounded-lg text-white font-bold">
+                    Ajustar Presupuesto
+                </button>
+            </div>
+        </div>
+        
+        <!-- Estadísticas -->
+        <div id="estadisticas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Las estadísticas se cargarán aquí -->
+        </div>
+
+        <!-- Tabs -->
+        <div class="glass-panel rounded-lg p-6 mb-8">
+            <div class="flex flex-wrap gap-4 mb-6">
+                <button onclick="cambiarTab('inventario')" id="tab-inventario" class="btn-medieval px-6 py-3 rounded-lg text-white font-bold">
+                    📦 Inventario
+                </button>
+                <button onclick="cambiarTab('ventas')" id="tab-ventas" class="btn-medieval px-6 py-3 rounded-lg text-white font-bold">
+                    💰 Ventas
+                </button>
+                <button onclick="cambiarTab('historial')" id="tab-historial" class="btn-medieval px-6 py-3 rounded-lg text-white font-bold">
+                    📜 Historial
+                </button>
+            </div>
+
+            <!-- Tab: Inventario -->
+            <div id="content-inventario" class="tab-content">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold gold-text medieval-title">Inventario</h2>
+                    <button onclick="mostrarModalProducto()" class="btn-medieval px-6 py-3 rounded-lg text-white font-bold">
+                        ➕ Agregar Producto
+                    </button>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="table-medieval w-full rounded-lg">
+                        <thead>
+                            <tr class="text-yellow-400">
+                                <th class="px-4 py-3 text-left">ID</th>
+                                <th class="px-4 py-3 text-left">Nombre</th>
+                                <th class="px-4 py-3 text-left">Descripción</th>
+                                <th class="px-4 py-3 text-left">Categoría</th>
+                                <th class="px-4 py-3 text-right">Precio</th>
+                                <th class="px-4 py-3 text-right">Stock</th>
+                                <th class="px-4 py-3 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-productos" class="text-yellow-100">
+                            <!-- Los productos se cargarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab: Ventas -->
+            <div id="content-ventas" class="tab-content hidden">
+                <h2 class="text-3xl font-bold gold-text medieval-title mb-6">Registrar Venta</h2>
+                
+                <form id="form-venta" class="max-w-2xl mx-auto space-y-4">
+                    <div>
+                        <label class="block text-yellow-400 font-bold mb-2">Producto</label>
+                        <select id="venta-producto" class="w-full px-4 py-3 rounded-lg" required>
+                            <option value="">Selecciona un producto...</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-yellow-400 font-bold mb-2">Cantidad</label>
+                        <input type="number" id="venta-cantidad" min="1" class="w-full px-4 py-3 rounded-lg" required>
+                    </div>
+                    
+                    <div id="venta-info" class="hidden glass-panel p-4 rounded-lg text-yellow-200">
+                        <p><strong>Precio unitario:</strong> <span id="venta-precio">0</span> monedas de oro</p>
+                        <p><strong>Stock disponible:</strong> <span id="venta-stock">0</span> unidades</p>
+                        <p class="text-2xl mt-2"><strong>Total:</strong> <span id="venta-total" class="gold-text">0</span> monedas de oro</p>
+                    </div>
+                    
+                    <button type="submit" class="btn-medieval w-full px-6 py-4 rounded-lg text-white font-bold text-xl">
+                        💰 Registrar Venta
+                    </button>
+                </form>
+            </div>
+
+            <!-- Tab: Historial -->
+            <div id="content-historial" class="tab-content hidden">
+                <h2 class="text-3xl font-bold gold-text medieval-title mb-6">Historial de Ventas</h2>
+                
+                <div class="overflow-x-auto">
+                    <table class="table-medieval w-full rounded-lg">
+                        <thead>
+                            <tr class="text-yellow-400">
+                                <th class="px-4 py-3 text-left">ID</th>
+                                <th class="px-4 py-3 text-left">Producto</th>
+                                <th class="px-4 py-3 text-right">Cantidad</th>
+                                <th class="px-4 py-3 text-right">Precio Unit.</th>
+                                <th class="px-4 py-3 text-right">Total</th>
+                                <th class="px-4 py-3 text-left">Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-ventas" class="text-yellow-100">
+                            <!-- Las ventas se cargarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Agregar/Editar Producto -->
+    <div id="modal-producto" class="hidden fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4">
+        <div class="glass-panel rounded-lg p-8 max-w-2xl w-full">
+            <h3 id="modal-titulo" class="text-2xl font-bold gold-text medieval-title mb-6">Agregar Producto</h3>
+            
+            <form id="form-producto" class="space-y-4">
+                <input type="hidden" id="producto-id">
+                
+                <div>
+                    <label class="block text-yellow-400 font-bold mb-2">Nombre del Producto</label>
+                    <input type="text" id="producto-nombre" class="w-full px-4 py-3 rounded-lg" required>
+                </div>
+                
+                <div>
+                    <label class="block text-yellow-400 font-bold mb-2">Descripción</label>
+                    <textarea id="producto-descripcion" rows="3" class="w-full px-4 py-3 rounded-lg"></textarea>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-yellow-400 font-bold mb-2">Precio de Venta</label>
+                        <input type="number" step="0.01" min="0" id="producto-precio" class="w-full px-4 py-3 rounded-lg" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-yellow-400 font-bold mb-2">Costo de Compra</label>
+                        <input type="number" step="0.01" min="0" id="producto-costo" class="w-full px-4 py-3 rounded-lg" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-yellow-400 font-bold mb-2">Cantidad</label>
+                        <input type="number" min="0" id="producto-cantidad" class="w-full px-4 py-3 rounded-lg" required>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-yellow-400 font-bold mb-2">Categoría</label>
+                    <select id="producto-categoria" class="w-full px-4 py-3 rounded-lg">
+                        <option value="Armas">Armas</option>
+                        <option value="Armaduras">Armaduras</option>
+                        <option value="Pociones">Pociones</option>
+                        <option value="Alimentos">Alimentos</option>
+                        <option value="Herramientas">Herramientas</option>
+                        <option value="General">General</option>
+                    </select>
+                </div>
+                
+                <div class="flex gap-4 mt-6">
+                    <button type="submit" class="btn-medieval flex-1 px-6 py-3 rounded-lg text-white font-bold">
+                        Guardar
+                    </button>
+                    <button type="button" onclick="cerrarModal()" class="btn-danger flex-1 px-6 py-3 rounded-lg text-white font-bold">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Ajustar Presupuesto -->
+    <div id="modal-presupuesto" class="hidden fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4">
+        <div class="glass-panel rounded-lg p-8 max-w-md w-full">
+            <h3 class="text-2xl font-bold gold-text medieval-title mb-6">Ajustar Presupuesto</h3>
+            
+            <form id="form-presupuesto" class="space-y-4">
+                <div>
+                    <label class="block text-yellow-400 font-bold mb-2">Nuevo Presupuesto</label>
+                    <input type="number" step="0.01" min="0" id="nuevo-presupuesto" class="w-full px-4 py-3 rounded-lg" required>
+                    <p class="text-yellow-200 text-sm mt-2">Presupuesto actual: <span id="presupuesto-actual-modal" class="gold-text">0.00</span></p>
+                </div>
+                
+                <div class="flex gap-4 mt-6">
+                    <button type="submit" class="btn-medieval flex-1 px-6 py-3 rounded-lg text-white font-bold">
+                        Actualizar
+                    </button>
+                    <button type="button" onclick="cerrarModalPresupuesto()" class="btn-danger flex-1 px-6 py-3 rounded-lg text-white font-bold">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
