@@ -9,14 +9,6 @@ Una moderna aplicación de escritorio profesional para gestionar inventario y ve
 
 ## Características Principales
 
-###  Nuevas Funcionalidades v2.0
-- ** Gestión de Categorías**: Crea carpetas personalizadas con colores e iconos
-- ** Campos Personalizados**: Instrucciones de manejo, uso específico y notas para cada producto
-- ** Ordenamiento Flexible**: Ordena productos por nombre, precio, stock o categoría
-- ** Organización Avanzada**: Agrupa productos en categorías con colores distintivos
-- ** Personalización Total**: Elige iconos y colores para tus categorías
-- ** Arquitectura Modular**: Código organizado en módulos profesionales
-
 ###  Características Principales
 - ** Aplicación de Escritorio Moderna**: Interfaz nativa inspirada en banking apps
 - ** Gestión Completa de Inventario**: Agregar, editar, organizar y visualizar productos
@@ -26,7 +18,13 @@ Una moderna aplicación de escritorio profesional para gestionar inventario y ve
 - ** Alertas Inteligentes**: Notificaciones de productos con bajo inventario
 - ** Tema Oscuro Profesional**: Diseño moderno con paleta de colores bancarios
 - ** Base de Datos Robusta**: SQLite con relaciones y campos extendidos
-
+- ** Gestión de Categorías**: Crea carpetas personalizadas con colores e iconos
+- ** Campos Personalizados**: Instrucciones de manejo, uso específico y notas para cada producto
+- ** Ordenamiento Flexible**: Ordena productos por nombre, precio, stock o categoría
+- ** Organización Avanzada**: Agrupa productos en categorías con colores distintivos
+- ** Personalización Total**: Elige iconos y colores para tus categorías
+- ** Arquitectura Modular**: Código organizado en módulos profesionales
+  
 ##  Instalación
 
 ### Prerrequisitos
