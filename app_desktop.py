@@ -385,9 +385,10 @@ class WareIncApp:
         # Categoría
         ctk.CTkLabel(compra_form, text="Categoría *", font=ctk.CTkFont(size=13),
                     text_color=COLORS['text_secondary']).pack(anchor="w", pady=(0, 5))
-        self.compra_categoria = ctk.CTkComboBox(compra_form, values=["Cargando..."], height=42,
+        self.compra_categoria = ctk.CTkComboBox(compra_form, values=["Cargando..."], height=50,
                                               corner_radius=10, border_width=0, fg_color=COLORS['bg_dark'],
-                                              font=ctk.CTkFont(size=12), state="readonly")
+                                              font=ctk.CTkFont(size=13), state="readonly", 
+                                              dropdown_font=ctk.CTkFont(size=12))
         self.compra_categoria.pack(fill="x", pady=(0, 15))
         
         # Precio de venta
