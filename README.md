@@ -1,21 +1,31 @@
-# 💼 InvenBank - Sistema de Inventario y Ventas
+# 💼 InvenBank Pro - Sistema de Inventario y Ventas v2.0
 
-Una moderna aplicación de escritorio para gestionar inventario y ventas de forma profesional, diseñada con una interfaz inspirada en aplicaciones bancarias.
+Una moderna aplicación de escritorio profesional para gestionar inventario y ventas, diseñada con una interfaz inspirada en aplicaciones bancarias. Ahora con arquitectura modular y funcionalidades extendidas.
 
 ![Python](https://img.shields.io/badge/Python-3.8+-blue)
 ![CustomTkinter](https://img.shields.io/badge/CustomTkinter-5.2+-green)
 ![SQLite](https://img.shields.io/badge/Database-SQLite-003B57)
+![Version](https://img.shields.io/badge/version-2.0-brightgreen)
 
-## 🎯 Características
+## 🎯 Características Principales
 
+### ✨ Nuevas Funcionalidades v2.0
+- **📁 Gestión de Categorías**: Crea carpetas personalizadas con colores e iconos
+- **📝 Campos Personalizados**: Instrucciones de manejo, uso específico y notas para cada producto
+- **🔄 Ordenamiento Flexible**: Ordena productos por nombre, precio, stock o categoría
+- **🏷️ Organización Avanzada**: Agrupa productos en categorías con colores distintivos
+- **🎨 Personalización Total**: Elige iconos y colores para tus categorías
+- **📊 Arquitectura Modular**: Código organizado en módulos profesionales
+
+### 🚀 Características Principales
 - **🖥️ Aplicación de Escritorio Moderna**: Interfaz nativa inspirada en banking apps
-- **📦 Gestión de Inventario**: Agregar, editar y visualizar productos
-- **💰 Punto de Venta**: Sistema rápido para procesar transacciones
-- **📜 Historial Completo**: Registro detallado de todas las ventas
-- **📊 Dashboard en Tiempo Real**: Estadísticas y métricas del negocio
-- **⚠️ Alertas de Stock**: Notificaciones de productos con bajo inventario
-- **🌙 Tema Oscuro**: Diseño profesional con colores modernos
-- **💾 Base de Datos SQLite**: Almacenamiento persistente y confiable
+- **📦 Gestión Completa de Inventario**: Agregar, editar, organizar y visualizar productos
+- **💰 Punto de Venta Rápido**: Sistema ágil para procesar transacciones
+- **📜 Historial Detallado**: Registro completo de todas las ventas con exportación a CSV
+- **📊 Dashboard en Tiempo Real**: Estadísticas y métricas actualizadas del negocio
+- **⚠️ Alertas Inteligentes**: Notificaciones de productos con bajo inventario
+- **🌙 Tema Oscuro Profesional**: Diseño moderno con paleta de colores bancarios
+- **💾 Base de Datos Robusta**: SQLite con relaciones y campos extendidos
 
 ## 🚀 Instalación
 
@@ -55,33 +65,51 @@ Luego abre tu navegador en `http://localhost:5000`
 
 ## 📚 Uso de la Aplicación
 
-### Dashboard
-- Vista general con métricas clave: capital, productos, ventas del día
-- Lista de productos con bajo stock para atención inmediata
+### 📊 Dashboard
+- Vista general con 4 métricas clave: Capital actual, Total de productos, Ventas del día, Ganancias totales
+- Tabla de productos con stock bajo (menos de 10 unidades) para atención inmediata
+- Actualización automática al cambiar entre secciones
 
-### Gestión de Productos
-- **Agregar**: Completa el formulario con nombre, descripción, categoría, precio, costo y cantidad
+### 📦 Gestión de Productos
+- **Agregar Producto**: 
+  - Nombre, descripción, categoría, precio de venta, costo de compra
+  - **NUEVO**: Instrucciones de manejo (ej: "Refrigerar a 4°C")
+  - **NUEVO**: Uso específico (ej: "Para uso en exteriores")
+  - **NUEVO**: Notas adicionales personalizadas
 - **Editar**: Doble clic en cualquier producto de la lista
-- **Buscar**: Usa la barra de búsqueda para encontrar productos rápidamente
-- **Actualizar**: Botón de refrescar para recargar la lista
+- **Ordenar**: Selecciona criterio de ordenamiento (personalizado, nombre, precio, stock, categoría)
+- **Filtrar**: Próximamente - filtrar por categoría
+- El sistema descuenta automáticamente del presupuesto al agregar productos
 
-### Punto de Venta
-- Selecciona el producto del menú desplegable
-- Ingresa la cantidad deseada
-- El sistema muestra automáticamente el total y stock disponible
+### 📁 Gestión de Categorías
+- **Crear Carpetas**: Organiza tus productos en categorías personalizadas
+- **Personalizar**: Elige un nombre, descripción, color e icono para cada categoría
+- **Iconos Disponibles**: Más de 80 emojis para representar tus categorías
+- **Colores**: 10 colores profesionales predefinidos
+- **Ver Productos**: Cantidad de productos en cada categoría
+- Las categorías no se pueden eliminar si contienen productos
+
+### 💰 Punto de Venta
+- Selecciona producto del menú desplegable (muestra stock disponible)
+- Ingresa cantidad deseada
+- Visualización en tiempo real de: producto, precio unitario, stock, total
 - Procesa la venta con un clic
-- Ver ventas recientes en tiempo real
+- Panel de ventas recientes con las últimas 10 transacciones
+- Actualización automática de inventario y capital
 
-### Historial de Ventas
-- Visualiza todas las transacciones realizadas
-- Exporta el historial a CSV para análisis externo
-- Actualiza la lista con el botón de refrescar
+### 📜 Historial de Ventas
+- Tabla completa de todas las transacciones
+- Información: ID, Producto, Cantidad, Precio unitario, Total, Fecha/hora
+- **Exportar a CSV**: Descarga el historial para análisis en Excel
+- Límite de 1000 ventas más recientes
+- Botón de actualización manual
 
-### Estadísticas
-- Ganancias totales y ventas completadas
-- Producto más vendido
-- Gestión de presupuesto/capital disponible
-- Actualizar capital manualmente cuando sea necesario
+### 📈 Estadísticas
+- **Ganancias Totales**: Suma de todas las ventas realizadas
+- **Total de Ventas**: Número de transacciones completadas
+- **Producto Más Vendido**: Producto con mayor cantidad de unidades vendidas
+- **Capital Disponible**: Presupuesto actual del negocio
+- **Gestionar Presupuesto**: Modal para ajustar el capital manualmente
 
 ## 🎨 Diseño de la Interfaz
 
@@ -106,13 +134,82 @@ Danger: #EF4444 (Rojo error)
 Background: #0F172A (Fondo oscuro)
 ```
 
-## 📊 Base de Datos
+## 📊 Estructura del Proyecto
 
-El sistema utiliza SQLite con las siguientes tablas:
+```
+ExamenFinal/
+│
+├── app_desktop.py              # Aplicación principal de escritorio
+├── app.py                      # Versión web (Flask) - legacy
+├── database.py                 # Base de datos legacy
+├── requirements.txt            # Dependencias del proyecto
+├── README.md                   # Este archivo
+├── .gitignore                  # Archivos ignorados por git
+│
+├── config/                     # Configuración
+│   └── settings.py             # Configuración global (colores, opciones)
+│
+├── src/                        # Código fuente modular
+│   ├── __init__.py
+│   ├── models/                 # Modelos de datos
+│   │   ├── __init__.py
+│   │   └── database_manager.py  # Gestor de base de datos mejorado
+│   ├── views/                  # Interfaces (futuro)
+│   ├── controllers/            # Controladores (futuro)
+│   └── utils/                  # Utilidades
+│       ├── __init__.py
+│       └── helpers.py          # Funciones auxiliares
+│
+├── assets/                     # Recursos multimedia
+│   └── images/                 # Imágenes (futuro)
+│
+├── static/                     # Archivos estáticos (web)
+│   ├── js/
+│   ├── css/
+│   └── audio/
+│
+└── templates/                  # Plantillas HTML (web)
+    └── index.html
+```
 
-- **productos**: ID, nombre, descripción, precio, cantidad, categoría, fecha
-- **ventas**: ID, producto_id, producto_nombre, cantidad, precio_unitario, total, fecha
-- **presupuesto**: ID, capital, última_actualización
+## 🗄️ Base de Datos
+
+El sistema utiliza SQLite con las siguientes tablas mejoradas:
+
+### **categorias**
+- `id`: INTEGER PRIMARY KEY
+- `nombre`: TEXT NOT NULL UNIQUE
+- `descripcion`: TEXT
+- `color`: TEXT (código hexadecimal)
+- `icono`: TEXT (emoji)
+- `fecha_creacion`: TEXT
+
+### **productos** (extendida)
+- `id`: INTEGER PRIMARY KEY
+- `nombre`: TEXT NOT NULL
+- `descripcion`: TEXT
+- `precio`: REAL NOT NULL
+- `cantidad`: INTEGER NOT NULL
+- `categoria_id`: INTEGER (FK a categorias)
+- `instrucciones_manejo`: TEXT ⭐ NUEVO
+- `uso_especifico`: TEXT ⭐ NUEVO
+- `notas_adicionales`: TEXT ⭐ NUEVO
+- `orden_visualizacion`: INTEGER (para ordenamiento personalizado) ⭐ NUEVO
+- `fecha_agregado`: TEXT
+
+### **ventas**
+- `id`: INTEGER PRIMARY KEY
+- `producto_id`: INTEGER (FK a productos)
+- `producto_nombre`: TEXT
+- `cantidad`: INTEGER
+- `precio_unitario`: REAL
+- `total`: REAL
+- `fecha`: TEXT
+
+### **presupuesto**
+- `id`: INTEGER (siempre 1)
+- `capital`: REAL
+- `ultima_actualizacion`: TEXT
 
 ## 🔧 Tecnologías Utilizadas
 
