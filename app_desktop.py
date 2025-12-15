@@ -27,7 +27,10 @@ class WareIncApp:
         self.db = DatabaseManager()
         self.root = ctk.CTk()
         self.root.title(APP_NAME)
-        self.root.geometry("1600x900")
+        
+        # Pantalla completa
+        self.root.state('zoomed')  # Maximizar en Windows
+        self.root.attributes('-fullscreen', False)  # No forzar fullscreen completo
         self.root.minsize(1400, 800)
         
         # Variables
@@ -38,11 +41,8 @@ class WareIncApp:
         self.orden_actual = 'orden_visualizacion'
         self.musica_activa = True
         
-        # Variables de animación navideña
-        self.copos_nieve = []
-        self.luces_arbol = []
-        self.santa_x = -200
-        self.santa_contador = 0
+        # Variables de animación (deshabilitadas para mejor rendimiento)
+        self.animaciones_activas = False
         
         # Inicializar música
         self.iniciar_musica()
@@ -67,26 +67,28 @@ class WareIncApp:
         ctk.CTkLabel(title_frame, text="v2.0", font=ctk.CTkFont(size=10), 
                     text_color=COLORS['text_secondary']).pack()
         
-        # Control de música
-        music_frame = ctk.CTkFrame(self.sidebar, fg_color=COLORS['bg_card'], corner_radius=8)
-        music_frame.pack(pady=10, padx=15, fill="x")
-        
-        ctk.CTkLabel(music_frame, text="Música", font=ctk.CTkFont(size=11, weight="bold"),
-                    text_color=COLORS['text_primary']).pack(pady=(8, 4))
-        
-        self.btn_musica = ctk.CTkButton(music_frame, text="Pausar", width=90, height=28,
-                                        fg_color=COLORS['primary'], hover_color=COLORS['secondary'],
-                                        font=ctk.CTkFont(size=11),
-                                        command=self.toggle_musica)
-        self.btn_musica.pack(pady=(0, 8))
+        # Control de música (solo si existe el archivo)
+        music_path = os.path.join(os.path.dirname(__file__), "assets", "medieval.mp3")
+        if os.path.exists(music_path):
+            music_frame = ctk.CTkFrame(self.sidebar, fg_color=COLORS['bg_card'], corner_radius=8)
+            music_frame.pack(pady=10, padx=15, fill="x")
+            
+            ctk.CTkLabel(music_frame, text="Música", font=ctk.CTkFont(size=11, weight="bold"),
+                        text_color=COLORS['text_primary']).pack(pady=(8, 4))
+            
+            self.btn_musica = ctk.CTkButton(music_frame, text="Pausar", width=90, height=28,
+                                            fg_color=COLORS['primary'], hover_color=COLORS['secondary'],
+                                            font=ctk.CTkFont(size=11),
+                                            command=self.toggle_musica)
+            self.btn_musica.pack(pady=(0, 8))
         
         # Botones de navegación
         self.nav_buttons = []
         self.create_nav_button("📊 Dashboard", "dashboard")
         self.create_nav_button("📦 Productos", "productos")
         self.create_nav_button("📁 Categorías", "categorias")
-        self.create_nav_button("� Compras", "compras")
-        self.create_nav_button("�💰 Ventas", "ventas")
+        self.create_nav_button("🛒 Compras", "compras")
+        self.create_nav_button("💰 Ventas", "ventas")
         self.create_nav_button("📜 Historial", "historial")
         self.create_nav_button("📈 Estadísticas", "estadisticas")
         
@@ -101,16 +103,9 @@ class WareIncApp:
         container_frame = ctk.CTkFrame(self.root, fg_color=COLORS['bg_dark'], corner_radius=0)
         container_frame.pack(side="right", fill="both", expand=True)
         
-        # Canvas de fondo para animaciones navideñas (debe ir primero como fondo)
-        self.canvas_fondo = Canvas(container_frame, bg=COLORS['bg_dark'], highlightthickness=0)
-        self.canvas_fondo.place(x=0, y=0, relwidth=1, relheight=1)
-        
-        # Main container (va encima del canvas)
+        # Main container sin canvas de fondo (mejor rendimiento)
         self.main_container = ctk.CTkScrollableFrame(container_frame, fg_color="transparent", corner_radius=0)
-        self.main_container.place(x=0, y=0, relwidth=1, relheight=1)
-        
-        # Iniciar animaciones navideñas
-        self.iniciar_animaciones_navidad()
+        self.main_container.pack(fill="both", expand=True)
         
         # Crear frames
         self.frames = {}
@@ -363,12 +358,11 @@ class WareIncApp:
         content = ctk.CTkFrame(frame, fg_color="transparent")
         content.pack(fill="both", expand=True, padx=20, pady=5)
         
-        # Panel izquierdo: Formulario de compra
-        left = ctk.CTkFrame(content, fg_color=COLORS['bg_card'], corner_radius=15, width=450)
-        left.pack(side="left", fill="both", padx=(0, 15))
-        left.pack_propagate(False)
+        # Panel izquierdo: Formulario de compra con scroll
+        left = ctk.CTkScrollableFrame(content, fg_color=COLORS['bg_card'], corner_radius=15, width=500)
+        left.pack(side="left", fill="both", expand=False, padx=(0, 15))
         
-        ctk.CTkLabel(left, text="🛒 Nueva Compra", font=ctk.CTkFont(size=18, weight="bold"),
+        ctk.CTkLabel(left, text="Nueva Compra", font=ctk.CTkFont(size=18, weight="bold"),
                     text_color=COLORS['text_primary']).pack(pady=20, padx=20, anchor="w")
         
         compra_form = ctk.CTkFrame(left, fg_color="transparent")
@@ -434,7 +428,7 @@ class WareIncApp:
         self.compra_total_label.pack(pady=(0, 10))
         
         # Botones
-        ctk.CTkButton(compra_form, text="Realizar Compra", font=ctk.CTkFont(size=15, weight="bold"),
+        ctk.CTkButton(compra_form, text="💳 Realizar Compra", font=ctk.CTkFont(size=15, weight="bold"),
                      height=50, corner_radius=10, fg_color=COLORS['primary'],
                      hover_color=COLORS['secondary'], command=self.procesar_compra).pack(fill="x", pady=5)
         
@@ -1339,229 +1333,37 @@ class WareIncApp:
     def iniciar_musica(self):
         """Inicializa y reproduce la música de fondo automáticamente"""
         try:
-            pygame.mixer.init()
+            # Deshabilitar música completamente si no hay archivo
             music_path = os.path.join(os.path.dirname(__file__), "assets", "medieval.mp3")
-            if os.path.exists(music_path):
-                pygame.mixer.music.load(music_path)
-                pygame.mixer.music.set_volume(0.3)  # Volumen al 30%
-                pygame.mixer.music.play(-1)  # -1 = loop infinito
-                self.musica_activa = True
-            else:
-                print("Archivo de música no encontrado, continuando sin música")
+            if not os.path.exists(music_path):
                 self.musica_activa = False
-                # Deshabilitar botón de música si no hay archivo
-                if hasattr(self, 'btn_musica'):
-                    self.btn_musica.configure(state="disabled", text="Sin música")
+                print("Archivo de música no encontrado, continuando sin música...")
+                return
+            
+            pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=512)
+            pygame.mixer.music.load(music_path)
+            pygame.mixer.music.set_volume(0.2)  # Volumen al 20%
+            pygame.mixer.music.play(-1)  # -1 = loop infinito
+            self.musica_activa = True
+            print("Música iniciada correctamente")
         except Exception as e:
-            print(f"Error al iniciar música: {e}")
+            print(f"⚠️ No se pudo iniciar la música: {e}")
+            print("La aplicación continuará sin música de fondo.")
             self.musica_activa = False
-            if hasattr(self, 'btn_musica'):
-                self.btn_musica.configure(state="disabled", text="Sin música")
     
     def toggle_musica(self):
         """Pausar/reanudar la música"""
-        if self.musica_activa:
-            pygame.mixer.music.pause()
-            self.btn_musica.configure(text="Reproducir")
-            self.musica_activa = False
-        else:
-            pygame.mixer.music.unpause()
-            self.btn_musica.configure(text="Pausar")
-            self.musica_activa = True
-    
-    def iniciar_animaciones_navidad(self):
-        """Inicializa las animaciones navideñas"""
-        # Obtener dimensiones reales después de un pequeño delay
-        self.root.after(100, self._crear_animaciones)
-    
-    def _crear_animaciones(self):
-        """Crea las animaciones después de que el canvas tenga dimensiones"""
-        ancho = self.canvas_fondo.winfo_width()
-        alto = self.canvas_fondo.winfo_height()
-        
-        # Si aún no tiene dimensiones, usar valores por defecto
-        if ancho <= 1:
-            ancho = 1400
-        if alto <= 1:
-            alto = 900
-            
-        # Crear copos de nieve
-        for _ in range(50):
-            x = random.randint(0, ancho)
-            y = random.randint(-alto, 0)
-            velocidad = random.uniform(1, 3)
-            tamaño = random.randint(2, 5)
-            copo = self.canvas_fondo.create_oval(x, y, x+tamaño, y+tamaño, fill='white', outline='')
-            self.copos_nieve.append({'id': copo, 'x': x, 'y': y, 'velocidad': velocidad, 'tamaño': tamaño})
-        
-        # Dibujar árbol de navidad
-        self.dibujar_arbol_navidad()
-        
-        # Iniciar animaciones
-        self.animar_copos()
-        self.animar_luces_arbol()
-        self.animar_santa()
-    
-    def dibujar_arbol_navidad(self):
-        """Dibuja un árbol de navidad en la esquina inferior derecha"""
-        ancho = self.canvas_fondo.winfo_width()
-        alto = self.canvas_fondo.winfo_height()
-        if ancho <= 1:
-            ancho = 1400
-        if alto <= 1:
-            alto = 900
-            
-        base_x, base_y = ancho - 150, alto - 100
-        
-        # Tronco
-        self.canvas_fondo.create_rectangle(base_x-15, base_y-50, base_x+15, base_y, fill='#8B4513', outline='')
-        
-        # Triángulos del árbol (3 niveles)
-        colores_verde = ['#0B6623', '#228B22', '#2E8B57']
-        tamaños = [(120, 100), (90, 80), (60, 60)]
-        y_offset = base_y - 50
-        
-        for i, (ancho, alto) in enumerate(tamaños):
-            points = [
-                base_x, y_offset - alto,  # punta
-                base_x - ancho//2, y_offset,  # izquierda
-                base_x + ancho//2, y_offset   # derecha
-            ]
-            self.canvas_fondo.create_polygon(points, fill=colores_verde[i], outline='')
-            y_offset -= alto * 0.7
-        
-        # Estrella en la punta
-        self.canvas_fondo.create_polygon(
-            base_x, y_offset-20,
-            base_x-8, y_offset-5,
-            base_x-15, y_offset,
-            base_x-5, y_offset+8,
-            base_x, y_offset+15,
-            base_x+5, y_offset+8,
-            base_x+15, y_offset,
-            base_x+8, y_offset-5,
-            fill='#FFD700', outline='#FFA500', width=2
-        )
-        
-        # Crear luces en el árbol
-        colores_luces = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF']
-        posiciones_luces = [
-            (base_x-50, base_y-80), (base_x+50, base_y-80),
-            (base_x-40, base_y-120), (base_x+40, base_y-120),
-            (base_x-30, base_y-160), (base_x+30, base_y-160),
-            (base_x-20, base_y-200), (base_x+20, base_y-200),
-        ]
-        
-        for i, (x, y) in enumerate(posiciones_luces):
-            color = colores_luces[i % len(colores_luces)]
-            luz = self.canvas_fondo.create_oval(x-4, y-4, x+4, y+4, fill=color, outline='white')
-            self.luces_arbol.append({'id': luz, 'color': color, 'x': x, 'y': y, 'encendida': True})
-    
-    def animar_copos(self):
-        """Anima los copos de nieve cayendo"""
-        ancho = self.canvas_fondo.winfo_width()
-        alto = self.canvas_fondo.winfo_height()
-        if ancho <= 1:
-            ancho = 1400
-        if alto <= 1:
-            alto = 900
-            
-        for copo in self.copos_nieve:
-            # Actualizar posición
-            copo['y'] += copo['velocidad']
-            
-            # Reiniciar si sale de la pantalla
-            if copo['y'] > alto:
-                copo['y'] = -10
-                copo['x'] = random.randint(0, ancho)
-            
-            # Actualizar posición
-            self.canvas_fondo.coords(copo['id'], copo['x'], copo['y'], 
-                                    copo['x']+copo['tamaño'], copo['y']+copo['tamaño'])
-        
-        # Repetir animación
-        self.root.after(30, self.animar_copos)
-    
-    def animar_luces_arbol(self):
-        """Anima las luces del árbol (parpadeo y cambio de color)"""
-        colores_luces = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#FFA500']
-        
-        for luz in self.luces_arbol:
-            # Parpadeo aleatorio
-            if random.random() < 0.1:
-                luz['encendida'] = not luz['encendida']
-                if luz['encendida']:
-                    # Cambiar color aleatoriamente
-                    luz['color'] = random.choice(colores_luces)
-                    self.canvas_fondo.itemconfig(luz['id'], fill=luz['color'], state='normal')
-                else:
-                    self.canvas_fondo.itemconfig(luz['id'], state='hidden')
-        
-        # Repetir animación
-        self.root.after(200, self.animar_luces_arbol)
-    
-    def animar_santa(self):
-        """Anima a Santa Claus pasando en su trineo"""
-        ancho = self.canvas_fondo.winfo_width()
-        if ancho <= 1:
-            ancho = 1400
-            
-        self.santa_contador += 1
-        
-        # Santa pasa cada 15 segundos (aproximadamente)
-        if self.santa_contador % 500 == 0:
-            self.santa_x = -200
-        
-        if self.santa_x < ancho + 200:
-            # Limpiar Santa anterior
-            self.canvas_fondo.delete('santa')
-            
-            # Dibujar trineo
-            y_base = 150
-            self.canvas_fondo.create_arc(self.santa_x, y_base+20, self.santa_x+80, y_base+50, 
-                                        start=0, extent=180, fill='#8B4513', outline='#654321', 
-                                        width=2, tags='santa')
-            
-            # Dibujar Santa
-            # Cuerpo
-            self.canvas_fondo.create_oval(self.santa_x+20, y_base, self.santa_x+50, y_base+35, 
-                                         fill='#DC143C', outline='white', width=2, tags='santa')
-            # Cabeza
-            self.canvas_fondo.create_oval(self.santa_x+25, y_base-15, self.santa_x+45, y_base+5, 
-                                         fill='#FFE4C4', outline='', tags='santa')
-            # Gorro
-            self.canvas_fondo.create_polygon(self.santa_x+25, y_base-15, self.santa_x+45, y_base-15,
-                                            self.santa_x+50, y_base-25, fill='#DC143C', outline='white', 
-                                            width=2, tags='santa')
-            self.canvas_fondo.create_oval(self.santa_x+48, y_base-28, self.santa_x+55, y_base-22, 
-                                         fill='white', outline='', tags='santa')
-            
-            # Renos (simplificados)
-            for i in range(2):
-                rx = self.santa_x + 90 + (i * 40)
-                # Cuerpo reno
-                self.canvas_fondo.create_oval(rx, y_base+15, rx+25, y_base+35, 
-                                             fill='#8B4513', outline='', tags='santa')
-                # Cabeza
-                self.canvas_fondo.create_oval(rx+20, y_base+5, rx+35, y_base+20, 
-                                             fill='#A0522D', outline='', tags='santa')
-                # Astas
-                self.canvas_fondo.create_line(rx+25, y_base+5, rx+20, y_base-5, 
-                                             fill='#8B4513', width=2, tags='santa')
-                self.canvas_fondo.create_line(rx+30, y_base+5, rx+35, y_base-5, 
-                                             fill='#8B4513', width=2, tags='santa')
-            
-            # Estrellas mágicas detrás
-            for i in range(3):
-                sx = self.santa_x - 20 - (i * 15)
-                sy = y_base + random.randint(0, 30)
-                self.canvas_fondo.create_oval(sx-3, sy-3, sx+3, sy+3, 
-                                             fill='#FFD700', outline='', tags='santa')
-            
-            self.santa_x += 4
-        
-        # Repetir animación
-        self.root.after(30, self.animar_santa)
+        try:
+            if self.musica_activa:
+                pygame.mixer.music.pause()
+                self.btn_musica.configure(text="Reproducir")
+                self.musica_activa = False
+            else:
+                pygame.mixer.music.unpause()
+                self.btn_musica.configure(text="Pausar")
+                self.musica_activa = True
+        except Exception as e:
+            print(f"⚠️ Error al controlar música: {e}")
     
     def run(self):
         self.root.mainloop()
