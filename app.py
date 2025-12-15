@@ -321,5 +321,57 @@ def actualizar_presupuesto():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 400
 
+# ===== GESTIÓN DE ARCHIVOS MENSUALES =====
+@app.route('/api/guardar-mes', methods=['POST'])
+def guardar_mes_actual():
+    """Guarda el archivo de la base de datos actual como backup"""
+    data = request.json if request.json else {}
+    nombre_archivo = data.get('nombre_archivo', None)
+    
+    try:
+        exito, mensaje, ruta_archivo = db.guardar_mes_actual(nombre_archivo)
+        if exito:
+            return jsonify({
+                'success': True, 
+                'message': mensaje,
+                'archivo': ruta_archivo
+            })
+        else:
+            return jsonify({'success': False, 'message': mensaje}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 400
+
+@app.route('/api/nuevo-mes', methods=['POST'])
+def crear_nuevo_mes():
+    """Crea una nueva base de datos para el siguiente mes"""
+    data = request.json if request.json else {}
+    mantener_productos = data.get('mantener_productos', True)
+    mantener_presupuesto = data.get('mantener_presupuesto', True)
+    
+    try:
+        exito, mensaje = db.crear_nuevo_mes(mantener_productos, mantener_presupuesto)
+        if exito:
+            return jsonify({
+                'success': True, 
+                'message': mensaje
+            })
+        else:
+            return jsonify({'success': False, 'message': mensaje}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 400
+
+@app.route('/api/backups', methods=['GET'])
+def listar_backups():
+    """Lista todos los backups mensuales disponibles"""
+    try:
+        backups = db.listar_backups()
+        return jsonify({
+            'success': True,
+            'backups': backups,
+            'total': len(backups)
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 400
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

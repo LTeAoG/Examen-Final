@@ -4,6 +4,8 @@ Incluye gestión de categorías personalizadas y campos adicionales
 """
 
 import sqlite3
+import shutil
+import os
 from datetime import datetime
 from typing import List, Dict, Optional, Tuple
 
@@ -542,3 +544,172 @@ class DatabaseManager:
             'ganancia_total': ganancia_total,
             'productos_bajo_stock': productos_bajo_stock
         }
+    
+    # ===== GESTIÓN DE ARCHIVOS MENSUALES =====
+    
+    def guardar_mes_actual(self, nombre_archivo: Optional[str] = None) -> Tuple[bool, str, str]:
+        """Guarda una copia de la base de datos actual con la fecha del mes
+        
+        Args:
+            nombre_archivo: Nombre personalizado para el archivo (opcional)
+            
+        Returns:
+            Tupla (éxito, mensaje, ruta_archivo)
+        """
+        try:
+            # Crear carpeta de backups si no existe
+            backup_dir = 'backups_mensuales'
+            if not os.path.exists(backup_dir):
+                os.makedirs(backup_dir)
+            
+            # Generar nombre del archivo con fecha
+            fecha_actual = datetime.now()
+            if nombre_archivo:
+                archivo_backup = os.path.join(backup_dir, nombre_archivo)
+                if not archivo_backup.endswith('.db'):
+                    archivo_backup += '.db'
+            else:
+                mes_anio = fecha_actual.strftime('%Y_%m_%B')
+                archivo_backup = os.path.join(backup_dir, f'inventario_{mes_anio}.db')
+            
+            # Verificar si ya existe
+            if os.path.exists(archivo_backup):
+                # Agregar timestamp para evitar sobrescribir
+                timestamp = fecha_actual.strftime('%Y%m%d_%H%M%S')
+                base_name = archivo_backup.replace('.db', '')
+                archivo_backup = f'{base_name}_{timestamp}.db'
+            
+            # Copiar el archivo de base de datos
+            shutil.copy2(self.db_name, archivo_backup)
+            
+            mensaje = f'Base de datos guardada exitosamente en: {archivo_backup}'
+            return True, mensaje, archivo_backup
+            
+        except Exception as e:
+            return False, f'Error al guardar la base de datos: {str(e)}', ''
+    
+    def crear_nuevo_mes(self, mantener_productos: bool = True, mantener_presupuesto: bool = True) -> Tuple[bool, str]:
+        """Crea una nueva base de datos para el siguiente mes
+        
+        Args:
+            mantener_productos: Si True, copia los productos actuales (sin ventas/compras)
+            mantener_presupuesto: Si True, mantiene el presupuesto actual
+            
+        Returns:
+            Tupla (éxito, mensaje)
+        """
+        try:
+            # Primero guardar el mes actual
+            exito, mensaje, archivo_backup = self.guardar_mes_actual()
+            if not exito:
+                return False, mensaje
+            
+            # Obtener datos a preservar si es necesario
+            productos_actuales = []
+            categorias_actuales = []
+            presupuesto_actual = None
+            
+            if mantener_productos or mantener_presupuesto:
+                conn = self.get_connection()
+                cursor = conn.cursor()
+                
+                if mantener_productos:
+                    # Obtener categorías
+                    cursor.execute('SELECT * FROM categorias')
+                    categorias_actuales = cursor.fetchall()
+                    
+                    # Obtener productos
+                    cursor.execute('SELECT * FROM productos')
+                    productos_actuales = cursor.fetchall()
+                
+                if mantener_presupuesto:
+                    # Obtener presupuesto actual
+                    cursor.execute('SELECT capital FROM presupuesto WHERE id = 1')
+                    resultado = cursor.fetchone()
+                    if resultado:
+                        presupuesto_actual = resultado[0]
+                
+                conn.close()
+            
+            # Eliminar la base de datos actual
+            if os.path.exists(self.db_name):
+                os.remove(self.db_name)
+            
+            # Crear nueva base de datos con estructura limpia
+            self.init_db()
+            
+            # Restaurar datos si se solicitó
+            if mantener_productos and (categorias_actuales or productos_actuales):
+                conn = self.get_connection()
+                cursor = conn.cursor()
+                
+                # Restaurar categorías
+                for cat in categorias_actuales:
+                    cursor.execute('''
+                        INSERT INTO categorias (id, nombre, descripcion, color, icono, fecha_creacion)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    ''', cat)
+                
+                # Restaurar productos
+                for prod in productos_actuales:
+                    cursor.execute('''
+                        INSERT INTO productos (id, nombre, descripcion, precio, cantidad, categoria_id,
+                                              instrucciones_manejo, uso_especifico, notas_adicionales,
+                                              orden_visualizacion, fecha_agregado)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ''', prod)
+                
+                conn.commit()
+                conn.close()
+            
+            if mantener_presupuesto and presupuesto_actual is not None:
+                conn = self.get_connection()
+                cursor = conn.cursor()
+                fecha = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                cursor.execute('''
+                    UPDATE presupuesto 
+                    SET capital = ?, ultima_actualizacion = ?
+                    WHERE id = 1
+                ''', (presupuesto_actual, fecha))
+                conn.commit()
+                conn.close()
+            
+            mensaje_final = f'Nuevo mes creado exitosamente. Backup guardado en: {archivo_backup}'
+            if mantener_productos:
+                mensaje_final += f'\nProductos y categorías preservados.'
+            if mantener_presupuesto:
+                mensaje_final += f'\nPresupuesto preservado: ${presupuesto_actual:.2f}'
+            
+            return True, mensaje_final
+            
+        except Exception as e:
+            return False, f'Error al crear nuevo mes: {str(e)}'
+    
+    def listar_backups(self) -> List[Dict[str, any]]:
+        """Lista todos los backups mensuales disponibles"""
+        backup_dir = 'backups_mensuales'
+        backups = []
+        
+        if not os.path.exists(backup_dir):
+            return backups
+        
+        try:
+            archivos = os.listdir(backup_dir)
+            for archivo in archivos:
+                if archivo.endswith('.db'):
+                    ruta_completa = os.path.join(backup_dir, archivo)
+                    stat = os.stat(ruta_completa)
+                    backups.append({
+                        'nombre': archivo,
+                        'ruta': ruta_completa,
+                        'tamanio': stat.st_size,
+                        'fecha_modificacion': datetime.fromtimestamp(stat.st_mtime).strftime('%Y-%m-%d %H:%M:%S')
+                    })
+            
+            # Ordenar por fecha de modificación (más reciente primero)
+            backups.sort(key=lambda x: x['fecha_modificacion'], reverse=True)
+            
+        except Exception as e:
+            print(f'Error al listar backups: {e}')
+        
+        return backups

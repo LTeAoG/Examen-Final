@@ -231,10 +231,11 @@ class WareIncApp:
                 entry.pack(fill="x")
                 self.producto_entries[field] = entry
             elif tipo == "text":
-                entry = ctk.CTkTextbox(form, height=70, corner_radius=10, border_width=0, 
-                                      fg_color=COLORS['bg_dark'], font=ctk.CTkFont(size=12))
-                entry.pack(fill="x")
-                self.producto_entries[field] = entry
+                textbox = ctk.CTkTextbox(form, height=70, corner_radius=10, border_width=0, 
+                                        fg_color=COLORS['bg_dark'], font=ctk.CTkFont(size=12),
+                                        wrap="word", activate_scrollbars=True)
+                textbox.pack(fill="x")
+                self.producto_entries[field] = textbox
             elif tipo == "combo":
                 entry = ctk.CTkComboBox(form, values=["Cargando..."], height=42, corner_radius=10, 
                                        border_width=0, fg_color=COLORS['bg_dark'], font=ctk.CTkFont(size=12),
@@ -293,10 +294,9 @@ class WareIncApp:
         content = ctk.CTkFrame(frame, fg_color="transparent")
         content.pack(fill="both", expand=True, padx=20, pady=5)
         
-        # Formulario
-        left = ctk.CTkFrame(content, fg_color=COLORS['bg_card'], corner_radius=15, width=400)
-        left.pack(side="left", fill="y", padx=(0, 15))
-        left.pack_propagate(False)
+        # Formulario con scroll
+        left = ctk.CTkScrollableFrame(content, fg_color=COLORS['bg_card'], corner_radius=15, width=400)
+        left.pack(side="left", fill="both", padx=(0, 15))
         
         ctk.CTkLabel(left, text="📁 Nueva Categoría", font=ctk.CTkFont(size=18, weight="bold"),
                     text_color=COLORS['text_primary']).pack(pady=20, padx=20, anchor="w")
@@ -315,23 +315,34 @@ class WareIncApp:
         
         ctk.CTkLabel(cat_form, text="Descripción", font=ctk.CTkFont(size=12),
                     text_color=COLORS['text_secondary']).pack(anchor="w", pady=(10, 5))
-        self.cat_entries['descripcion'] = ctk.CTkTextbox(cat_form, height=80, corner_radius=10,
-                                                         border_width=0, fg_color=COLORS['bg_dark'],
-                                                         font=ctk.CTkFont(size=11), activate_scrollbars=True)
-        self.cat_entries['descripcion'].pack(fill="x")
-        self.cat_entries['descripcion'].insert("1.0", "")  # Asegurar que está vacío y editable
+        
+        # Crear CTkTextbox para descripción
+        self.cat_entries['descripcion'] = ctk.CTkTextbox(
+            cat_form, 
+            height=100, 
+            corner_radius=10,
+            border_width=0, 
+            fg_color=COLORS['bg_dark'],
+            text_color=COLORS['text_primary'],
+            font=ctk.CTkFont(size=12), 
+            wrap="word",
+            activate_scrollbars=True
+        )
+        self.cat_entries['descripcion'].pack(fill="x", pady=(0, 10))
         
         ctk.CTkLabel(cat_form, text="Color", font=ctk.CTkFont(size=12),
                     text_color=COLORS['text_secondary']).pack(anchor="w", pady=(10, 5))
         self.cat_entries['color'] = ctk.CTkComboBox(cat_form, values=[c[1] for c in COLORES_DISPONIBLES],
                                                     height=40, corner_radius=10, border_width=0, fg_color=COLORS['bg_dark'])
         self.cat_entries['color'].pack(fill="x")
+        self.cat_entries['color'].set([c[1] for c in COLORES_DISPONIBLES][0] if COLORES_DISPONIBLES else "Azul")
         
         ctk.CTkLabel(cat_form, text="Icono", font=ctk.CTkFont(size=12),
                     text_color=COLORS['text_secondary']).pack(anchor="w", pady=(10, 5))
         self.cat_entries['icono'] = ctk.CTkComboBox(cat_form, values=ICONOS_DISPONIBLES[:20],
                                                     height=40, corner_radius=10, border_width=0, fg_color=COLORS['bg_dark'])
         self.cat_entries['icono'].pack(fill="x")
+        self.cat_entries['icono'].set(ICONOS_DISPONIBLES[0] if ICONOS_DISPONIBLES else "📦")
         
         ctk.CTkButton(cat_form, text="💾 Guardar Categoría", font=ctk.CTkFont(size=14, weight="bold"),
                      height=45, corner_radius=10, fg_color=COLORS['accent'], 
@@ -542,13 +553,18 @@ class WareIncApp:
         header = self.create_header("Estadísticas", "Análisis del negocio")
         header.pack(fill="x", padx=20, pady=10)
         
-        grid = ctk.CTkFrame(frame, fg_color="transparent")
-        grid.pack(fill="both", expand=True, padx=20, pady=5)
+        # Contenedor con scroll para las estadísticas
+        scroll_frame = ctk.CTkScrollableFrame(frame, fg_color="transparent")
+        scroll_frame.pack(fill="both", expand=True, padx=20, pady=5)
+        
+        grid = ctk.CTkFrame(scroll_frame, fg_color="transparent")
+        grid.pack(fill="both", expand=True)
         
         self.stat_labels = {}
         
-        row1 = ctk.CTkFrame(grid, fg_color="transparent")
+        row1 = ctk.CTkFrame(grid, fg_color="transparent", height=160)
         row1.pack(fill="x", pady=10)
+        row1.pack_propagate(False)
         
         self.stat_labels['ganancias'] = self.create_large_card(row1, "💰 Ganancias", "$0", "Total", COLORS['accent'])
         self.stat_labels['ganancias'].pack(side="left", fill="both", expand=True, padx=5)
@@ -556,8 +572,9 @@ class WareIncApp:
         self.stat_labels['ventas'] = self.create_large_card(row1, "🛍️ Ventas", "0", "transacciones", COLORS['secondary'])
         self.stat_labels['ventas'].pack(side="left", fill="both", expand=True, padx=5)
         
-        row2 = ctk.CTkFrame(grid, fg_color="transparent")
+        row2 = ctk.CTkFrame(grid, fg_color="transparent", height=160)
         row2.pack(fill="x", pady=10)
+        row2.pack_propagate(False)
         
         self.stat_labels['producto'] = self.create_large_card(row2, "🏆 Top Producto", "-", "0 ventas", COLORS['warning'])
         self.stat_labels['producto'].pack(side="left", fill="both", expand=True, padx=5)
@@ -565,9 +582,9 @@ class WareIncApp:
         self.stat_labels['capital'] = self.create_large_card(row2, "💵 Capital", "$0", "disponible", COLORS['primary'])
         self.stat_labels['capital'].pack(side="left", fill="both", expand=True, padx=5)
         
-        ctk.CTkButton(frame, text="⚙️ Gestionar Presupuesto", font=ctk.CTkFont(size=14, weight="bold"),
+        ctk.CTkButton(grid, text="⚙️ Gestionar Presupuesto", font=ctk.CTkFont(size=14, weight="bold"),
                      height=45, corner_radius=10, fg_color=COLORS['primary'],
-                     command=self.modal_presupuesto).pack(pady=20)
+                     command=self.modal_presupuesto).pack(pady=30, padx=5, fill="x")
     
     def create_header(self, title, subtitle):
         header = ctk.CTkFrame(self.main_container, fg_color="transparent")
@@ -988,31 +1005,44 @@ class WareIncApp:
     def guardar_categoria(self):
         try:
             nombre = self.cat_entries['nombre'].get().strip()
-            desc = self.cat_entries['descripcion'].get("1.0", "end-1c").strip()
+            
+            # Obtener descripción del textbox
+            desc_text = self.cat_entries['descripcion'].get("1.0", "end-1c").strip()
+            
             color_nombre = self.cat_entries['color'].get()
             icono = self.cat_entries['icono'].get()
             
+            # Validar nombre
+            if not nombre:
+                messagebox.showwarning("Advertencia", "El nombre de la categoría es obligatorio")
+                return
+            
+            # Convertir nombre de color a hex
             color_hex = COLORS['secondary']
             for hex_val, nombre_color in COLORES_DISPONIBLES:
                 if nombre_color == color_nombre:
                     color_hex = hex_val
                     break
             
-            if not nombre:
-                messagebox.showwarning("Advertencia", "El nombre es obligatorio")
-                return
+            # Crear la categoría
+            resultado = self.db.crear_categoria(nombre, desc_text, color_hex, icono)
             
-            resultado = self.db.crear_categoria(nombre, desc, color_hex, icono)
             if resultado[0]:
-                messagebox.showinfo("Éxito", "Categoría creada")
+                messagebox.showinfo("✅ Éxito", f"Categoría '{nombre}' creada correctamente")
+                
+                # Limpiar formulario
                 self.cat_entries['nombre'].delete(0, 'end')
                 self.cat_entries['descripcion'].delete("1.0", "end")
+                
+                # Recargar datos
                 self.cargar_categorias()
                 self.cargar_combo_categorias()
+                self.cargar_combo_categorias_compra()
             else:
-                messagebox.showerror("Error", resultado[1])
+                messagebox.showerror("❌ Error", resultado[1])
+                
         except Exception as e:
-            messagebox.showerror("Error", str(e))
+            messagebox.showerror("Error", f"Error al guardar categoría: {str(e)}")
     
     def actualizar_info_venta(self, *args):
         try:
