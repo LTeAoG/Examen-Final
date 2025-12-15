@@ -214,46 +214,6 @@ class Database:
         conn.close()
         return ventas
     
-    def obtener_estadisticas(self):
-        """Obtiene estadísticas generales"""
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        
-        # Total de productos
-        cursor.execute('SELECT COUNT(*) FROM productos')
-        total_productos = cursor.fetchone()[0]
-        
-        # Valor total del inventario
-        cursor.execute('SELECT SUM(precio * cantidad) FROM productos')
-        valor_inventario = cursor.fetchone()[0] or 0
-        
-        # Total de ventas
-        cursor.execute('SELECT SUM(total) FROM ventas')
-        total_ventas = cursor.fetchone()[0] or 0
-        
-        # Número de ventas
-        cursor.execute('SELECT COUNT(*) FROM ventas')
-        num_ventas = cursor.fetchone()[0]
-        
-        # Productos con bajo stock (menos de 10)
-        cursor.execute('SELECT COUNT(*) FROM productos WHERE cantidad < 10')
-        productos_bajo_stock = cursor.fetchone()[0]
-        
-        # Presupuesto actual
-        cursor.execute('SELECT capital FROM presupuesto WHERE id = 1')
-        presupuesto_actual = cursor.fetchone()[0]
-        
-        conn.close()
-        
-        return {
-            'total_productos': total_productos,
-            'valor_inventario': valor_inventario,
-            'total_ventas': total_ventas,
-            'num_ventas': num_ventas,
-            'productos_bajo_stock': productos_bajo_stock,
-            'presupuesto_actual': presupuesto_actual
-        }
-    
     # ===== PRESUPUESTO =====
     def obtener_presupuesto(self):
         """Obtiene el presupuesto actual"""
@@ -281,3 +241,67 @@ class Database:
         conn.commit()
         conn.close()
         return True
+    
+    def obtener_productos_bajo_stock(self, limite=10):
+        """Obtiene productos con stock bajo (menos de 10 unidades)"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM productos WHERE cantidad < 10 ORDER BY cantidad ASC LIMIT ?', (limite,))
+        productos = cursor.fetchall()
+        
+        conn.close()
+        return productos
+    
+    def obtener_producto_mas_vendido(self):
+        """Obtiene el producto más vendido"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT producto_nombre, SUM(cantidad) as total_vendido
+            FROM ventas
+            GROUP BY producto_nombre
+            ORDER BY total_vendido DESC
+            LIMIT 1
+        ''')
+        resultado = cursor.fetchone()
+        
+        conn.close()
+        return resultado if resultado else ("Ninguno", 0)
+    
+    def obtener_estadisticas(self):
+        """Obtiene estadísticas generales actualizadas para la app"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        # Total de productos
+        cursor.execute('SELECT COUNT(*) FROM productos')
+        total_productos = cursor.fetchone()[0]
+        
+        # Total de ventas
+        cursor.execute('SELECT COUNT(*) FROM ventas')
+        total_ventas = cursor.fetchone()[0]
+        
+        # Ventas del día
+        hoy = datetime.now().strftime('%Y-%m-%d')
+        cursor.execute('SELECT SUM(total) FROM ventas WHERE DATE(fecha) = ?', (hoy,))
+        ventas_dia = cursor.fetchone()[0] or 0
+        
+        # Ganancia total (suma de todas las ventas)
+        cursor.execute('SELECT SUM(total) FROM ventas')
+        ganancia_total = cursor.fetchone()[0] or 0
+        
+        # Productos con bajo stock
+        cursor.execute('SELECT COUNT(*) FROM productos WHERE cantidad < 10')
+        productos_bajo_stock = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        return {
+            'total_productos': total_productos,
+            'total_ventas': total_ventas,
+            'ventas_dia': ventas_dia,
+            'ganancia_total': ganancia_total,
+            'productos_bajo_stock': productos_bajo_stock
+        }

@@ -1,312 +1,207 @@
-# Reino del Comercio - Sistema de Inventario y Ventas
+# 💼 InvenBank - Sistema de Inventario y Ventas
 
-Una aplicación web medieval para gestionar el inventario y ventas de tu reino, desarrollada con Python Flask y diseñada con Tailwind CSS.
+Una moderna aplicación de escritorio para gestionar inventario y ventas de forma profesional, diseñada con una interfaz inspirada en aplicaciones bancarias.
 
-![Medieval Theme](https://img.shields.io/badge/Theme-Medieval-goldenrod)
 ![Python](https://img.shields.io/badge/Python-3.8+-blue)
-![Flask](https://img.shields.io/badge/Flask-2.0+-green)
-![Tailwind](https://img.shields.io/badge/Tailwind-CSS-38bdf8)
+![CustomTkinter](https://img.shields.io/badge/CustomTkinter-5.2+-green)
+![SQLite](https://img.shields.io/badge/Database-SQLite-003B57)
 
-## Características
+## 🎯 Características
 
-- **Gestión de Inventario**: Agregar, editar, eliminar y visualizar productos
-- **Registro de Ventas**: Sistema completo para registrar transacciones
-- **Historial de Ventas**: Visualiza todas las ventas realizadas
-- **Estadísticas en Tiempo Real**: Monitorea el estado de tu inventario
-- **Alertas de Stock Bajo**: Notificaciones automáticas de productos con bajo inventario
-- **Diseño Medieval**: Interfaz temática con dragones y caballeros
-- **Música de Ambiente**: Reproductor de música medieval integrado
-- **Base de Datos SQLite**: Almacenamiento persistente y ligero
+- **🖥️ Aplicación de Escritorio Moderna**: Interfaz nativa inspirada en banking apps
+- **📦 Gestión de Inventario**: Agregar, editar y visualizar productos
+- **💰 Punto de Venta**: Sistema rápido para procesar transacciones
+- **📜 Historial Completo**: Registro detallado de todas las ventas
+- **📊 Dashboard en Tiempo Real**: Estadísticas y métricas del negocio
+- **⚠️ Alertas de Stock**: Notificaciones de productos con bajo inventario
+- **🌙 Tema Oscuro**: Diseño profesional con colores modernos
+- **💾 Base de Datos SQLite**: Almacenamiento persistente y confiable
 
-## Cómo Agregar Música Medieval
+## 🚀 Instalación
 
-Para agregar música de fondo medieval a tu aplicación, sigue estos pasos:
+### Prerrequisitos
 
-### Opción 1: Usando Archivos Locales (Recomendado)
+- Python 3.8 o superior instalado
+- pip (gestor de paquetes de Python)
 
-1. **Descarga música medieval libre de derechos** de sitios como:
-   - [FreePD.com](https://freepd.com) - Música de dominio público
-   - [Incompetech.com](https://incompetech.com) - Música libre (con atribución)
-   - [Pixabay Music](https://pixabay.com/music/) - Música libre
-   - [YouTube Audio Library](https://studio.youtube.com/) - Música libre
+### Pasos de Instalación
 
-2. **Busca términos como**:
-   - "Medieval Tavern Music"
-   - "Celtic Relaxing Music"
-   - "Medieval Lute Music"
-   - "Fantasy Medieval Ambient"
+1. **Clonar o descargar el proyecto**
 
-3. **Guarda el archivo MP3** en la carpeta:
-   ```
-   static/audio/medieval.mp3
+2. **Instalar las dependencias**:
+   ```bash
+   pip install -r requirements.txt
    ```
 
-4. **Verifica que el nombre coincida** con el especificado en el HTML o cambia la ruta en `templates/index.html`:
-   ```html
-   <source src="/static/audio/medieval.mp3" type="audio/mpeg">
-   ```
+## 📱 Ejecutar la Aplicación de Escritorio
 
-### Opción 2: Streaming desde URL
-
-Si tienes un enlace directo a un archivo MP3 en línea, modifica `templates/index.html`:
-
-```html
-<audio id="bgMusic" loop>
-    <source src="URL_DE_TU_MUSICA.mp3" type="audio/mpeg">
-</audio>
-```
-
-### Opción 3: YouTube Embebido (Más Complejo)
-
-Para música de YouTube, necesitarías usar la API de YouTube o un iframe. Sin embargo, esto es más complejo y puede tener restricciones.
-
-### Recomendaciones de Música
-
-Busca en YouTube o Spotify:
-- "Adrian von Ziegler - Medieval Music"
-- "BrunuhVille - Celtic/Medieval"
-- "Derek & Brandon Fiechter - Medieval Fantasy"
-- "Tavern Music - Medieval Relaxing"
-
-**Descarga usando convertidores legales** o servicios que respeten los derechos de autor.
-
-## Requisitos del Sistema
-
-- Python 3.8 o superior
-- Navegador web moderno (Chrome, Firefox, Edge, Safari)
-- 50 MB de espacio en disco
-
-## Instalación
-
-### 1. Clona o descarga el proyecto
+Para iniciar la aplicación de escritorio moderna:
 
 ```bash
-cd "c:\Epc\2do Semestre\Programación\ExamenFinal"
+python app_desktop.py
 ```
 
-### 2. Crea un entorno virtual (recomendado)
+La aplicación se abrirá en una ventana nativa de tu sistema operativo.
 
-```bash
-# En Windows
-python -m venv venv
-venv\Scripts\activate
+## 🌐 Ejecutar la Aplicación Web (Versión Antigua)
 
-# En Linux/Mac
-python3 -m venv venv
-source venv/bin/activate
-```
-
-### 3. Instala las dependencias
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. (Opcional) Agrega tu música medieval
-
-Coloca un archivo MP3 de música medieval en:
-```
-static/audio/medieval.mp3
-```
-
-## Uso
-
-### Iniciar la Aplicación
+Si prefieres usar la versión web con tema medieval:
 
 ```bash
 python app.py
 ```
 
-La aplicación estará disponible en: **http://localhost:5000**
+Luego abre tu navegador en `http://localhost:5000`
 
-### Funcionalidades Principales
+## 📚 Uso de la Aplicación
 
-#### Gestión de Inventario
+### Dashboard
+- Vista general con métricas clave: capital, productos, ventas del día
+- Lista de productos con bajo stock para atención inmediata
 
-1. **Ver Productos**: Al iniciar, verás todos los productos en la pestaña "Inventario"
-2. **Agregar Producto**:
-   - Haz clic en "Agregar Producto"
-   - Completa el formulario:
-     - Nombre del producto
-     - Descripción (opcional)
-     - Precio en monedas de oro
-     - Cantidad en stock
-     - Categoría (Armas, Armaduras, Pociones, etc.)
-   - Haz clic en "Guardar"
+### Gestión de Productos
+- **Agregar**: Completa el formulario con nombre, descripción, categoría, precio, costo y cantidad
+- **Editar**: Doble clic en cualquier producto de la lista
+- **Buscar**: Usa la barra de búsqueda para encontrar productos rápidamente
+- **Actualizar**: Botón de refrescar para recargar la lista
 
-3. **Editar Producto**:
-   - Haz clic en el botón de edición del producto
-   - Modifica los campos necesarios
-   - Guarda los cambios
+### Punto de Venta
+- Selecciona el producto del menú desplegable
+- Ingresa la cantidad deseada
+- El sistema muestra automáticamente el total y stock disponible
+- Procesa la venta con un clic
+- Ver ventas recientes en tiempo real
 
-4. **Eliminar Producto**:
-   - Haz clic en el botón de eliminar
-   - Confirma la eliminación
+### Historial de Ventas
+- Visualiza todas las transacciones realizadas
+- Exporta el historial a CSV para análisis externo
+- Actualiza la lista con el botón de refrescar
 
-#### Registro de Ventas
+### Estadísticas
+- Ganancias totales y ventas completadas
+- Producto más vendido
+- Gestión de presupuesto/capital disponible
+- Actualizar capital manualmente cuando sea necesario
 
-1. Ve a la pestaña "Ventas"
-2. Selecciona un producto del menú desplegable
-3. Ingresa la cantidad a vender
-4. Revisa el total calculado automáticamente
-5. Haz clic en "Registrar Venta"
-6. El stock se actualizará automáticamente
+## 🎨 Diseño de la Interfaz
 
-#### Historial de Ventas
+La aplicación de escritorio está diseñada con una interfaz moderna inspirada en aplicaciones bancarias:
 
-1. Ve a la pestaña "Historial"
-2. Visualiza todas las ventas realizadas con:
-   - Producto vendido
-   - Cantidad
-   - Precio unitario
-   - Total de la venta
-   - Fecha y hora
+- **Paleta de Colores Profesional**: Azules oscuros, verdes de éxito, tonos premium
+- **Sidebar de Navegación**: Acceso rápido a todas las secciones
+- **Tarjetas de Estadísticas**: Información importante al instante
+- **Tablas Modernas**: Visualización limpia de datos con scrolling
+- **Formularios Intuitivos**: Campos de entrada claros y bien organizados
+- **Botones de Acción**: Diseño distintivo para acciones importantes
+- **Tema Oscuro**: Reduce fatiga visual en sesiones largas
 
-#### Control de Música
-
-- Haz clic en el botón "Música" en la esquina inferior derecha
-- La música comenzará a reproducirse en loop
-- Haz clic en "Pausar" para detenerla
-
-## Estadísticas
-
-En la parte superior verás 4 tarjetas con información clave:
-
-- **Productos**: Total de productos en inventario
-- **Valor Inventario**: Valor total de todos los productos
-- **Total Ventas**: Ingresos totales generados
-- **Stock Bajo**: Productos con menos de 10 unidades (alerta)
-
-## Estructura del Proyecto
+### Paleta de Colores
 
 ```
-ExamenFinal/
-│
-├── app.py                  # Aplicación Flask principal
-├── database.py             # Gestión de base de datos SQLite
-├── requirements.txt        # Dependencias de Python
-├── README.md              # Este archivo
-│
-├── templates/
-│   └── index.html         # Interfaz HTML con Tailwind CSS
-│
-├── static/
-│   ├── js/
-│   │   └── app.js         # Lógica JavaScript del frontend
-│   ├── css/
-│   │   └── (estilos personalizados si los hay)
-│   └── audio/
-│       └── medieval.mp3   # Música de fondo (debes agregarla)
-│
-└── inventario_ventas.db   # Base de datos (se crea automáticamente)
+Primary: #1E3A8A (Azul profesional)
+Secondary: #3B82F6 (Azul brillante)
+Accent: #10B981 (Verde éxito)
+Warning: #F59E0B (Amarillo advertencia)
+Danger: #EF4444 (Rojo error)
+Background: #0F172A (Fondo oscuro)
 ```
 
-## Personalización
+## 📊 Base de Datos
 
-### Cambiar el Tema de Colores
+El sistema utiliza SQLite con las siguientes tablas:
 
-Edita los colores en `templates/index.html` en la sección `<style>`:
+- **productos**: ID, nombre, descripción, precio, cantidad, categoría, fecha
+- **ventas**: ID, producto_id, producto_nombre, cantidad, precio_unitario, total, fecha
+- **presupuesto**: ID, capital, última_actualización
 
-```css
-/* Cambiar el color dorado principal */
-.gold-text {
-    color: #DAA520; /* Cambia este color */
-}
-```
+## 🔧 Tecnologías Utilizadas
 
-### Modificar Categorías de Productos
+- **Python 3.8+**: Lenguaje de programación
+- **CustomTkinter**: Framework moderno para interfaces gráficas
+- **SQLite3**: Base de datos embebida
+- **Pillow (PIL)**: Procesamiento de imágenes
+- **Flask**: Servidor web (versión web opcional)
 
-Edita el select de categorías en `templates/index.html`:
-
-```html
-<select id="producto-categoria">
-    <option value="Armas">Armas</option>
-    <option value="TuCategoria">Tu Nueva Categoría</option>
-</select>
-```
-
-### Cambiar la Imagen de Fondo
-
-En `templates/index.html`, modifica la URL de la imagen:
-
-```css
-body {
-    background-image: url('TU_URL_DE_IMAGEN');
-}
-```
-
-**Sugerencias de búsqueda** para imágenes gratuitas:
-- [Unsplash](https://unsplash.com/s/photos/dragon-knight)
-- [Pexels](https://www.pexels.com/search/medieval/)
-- [Pixabay](https://pixabay.com/images/search/dragon/)
-
-## Solución de Problemas
+## 🐛 Solución de Problemas
 
 ### La aplicación no inicia
+- Verifica que Python 3.8+ esté instalado: `python --version`
+- Asegúrate de haber instalado las dependencias: `pip install -r requirements.txt`
 
+### Error de módulos no encontrados
 ```bash
-# Verifica que Flask esté instalado
-pip list | grep Flask
-
-# Reinstala las dependencias
-pip install -r requirements.txt
+pip install customtkinter pillow
 ```
 
-### No hay música
+### La base de datos no guarda cambios
+- Verifica permisos de escritura en la carpeta del proyecto
+- Elimina `inventario_ventas.db` para crear una nueva base de datos limpia
 
-1. Verifica que el archivo exista en `static/audio/medieval.mp3`
-2. Verifica que el formato sea MP3
-3. Comprueba que el navegador soporte reproducción de audio
-4. Algunos navegadores requieren interacción del usuario antes de reproducir audio
+### Problemas de visualización
+- Asegúrate de tener los drivers gráficos actualizados
+- La aplicación requiere resolución mínima de 1280x720
 
-### Errores de base de datos
-
-```bash
-# Elimina la base de datos y déjala recrearse
-rm inventario_ventas.db
-python app.py
-```
-
-### Puerto 5000 ocupado
-
-Cambia el puerto en `app.py`:
-
-```python
-app.run(debug=True, port=5001)  # Usa otro puerto
-```
-
-## Características de Seguridad
-
-- Validación de datos en frontend y backend
-- Prevención de SQL injection mediante consultas parametrizadas
-- Validación de stock antes de ventas
-- Manejo de errores robusto
-
-## Licencia
-
-Este proyecto es de código abierto y está disponible bajo la licencia MIT.
-
-## Contribuciones
+## 🤝 Contribuciones
 
 Las contribuciones son bienvenidas. Para cambios importantes:
-
-1. Haz un fork del proyecto
-2. Crea una rama para tu característica
-3. Haz commit de tus cambios
-4. Push a la rama
+1. Haz fork del proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/NuevaCaracteristica`)
+3. Commit tus cambios (`git commit -m 'Agregar nueva característica'`)
+4. Push a la rama (`git push origin feature/NuevaCaracteristica`)
 5. Abre un Pull Request
 
-## Autor
+## 📄 Licencia
 
-Desarrollado para el curso de Programación - 2do Semestre EPC
+Este proyecto es de uso educativo.
 
-## Agradecimientos
+## 👨‍💻 Autor
 
-- Tailwind CSS por el framework de estilos
-- Flask por el framework web
-- Unsplash por las imágenes de fondo
-- La comunidad de música medieval libre
+Desarrollado como proyecto final para el curso de Programación.
 
 ---
 
-**¡Que la fortuna acompañe a tu reino!**
+## 📝 Notas Adicionales
+
+### Diferencias entre Versión Web y Escritorio
+
+**Aplicación de Escritorio (app_desktop.py)**:
+- ✅ Interfaz nativa y moderna
+- ✅ Mejor rendimiento
+- ✅ No requiere navegador
+- ✅ Diseño inspirado en banking apps
+- ✅ Más rápida y fluida
+
+**Aplicación Web (app.py)**:
+- ✅ Tema medieval divertido
+- ✅ Accesible desde cualquier dispositivo
+- ✅ Requiere navegador
+- ✅ Música de ambiente
+- ⚠️ Requiere servidor corriendo
+
+### Próximas Características Planeadas
+
+- 📈 Gráficos y reportes avanzados
+- 🔐 Sistema de usuarios y permisos
+- 📧 Notificaciones por email
+- 🖨️ Impresión de tickets de venta
+- 📱 Versión móvil responsive
+- 🌍 Soporte multi-idioma
+- ☁️ Respaldos automáticos en la nube
+
+### FAQ
+
+**¿Puedo usar ambas versiones simultáneamente?**
+Sí, ambas usan la misma base de datos SQLite, pero no las ejecutes al mismo tiempo para evitar conflictos.
+
+**¿Cómo respaldo mis datos?**
+Simplemente copia el archivo `inventario_ventas.db` a un lugar seguro.
+
+**¿Puedo personalizar los colores?**
+Sí, edita el diccionario `COLORS` en [app_desktop.py](app_desktop.py#L18) para cambiar la paleta.
+
+**¿Funciona en Mac/Linux?**
+Sí, CustomTkinter es multiplataforma y funciona en Windows, macOS y Linux.
+
+---
+
+**¡Gracias por usar InvenBank!** 💼✨
