@@ -3,7 +3,7 @@ Configuración global de la aplicación
 """
 
 # Configuración de la aplicación
-APP_NAME = "InvenBank Pro"
+APP_NAME = "WareInc"
 APP_VERSION = "2.0.0"
 APP_DESCRIPTION = "Sistema Profesional de Gestión de Inventario y Ventas"
 

@@ -5,3 +5,4 @@ Werkzeug==2.3.7
 # Dependencias para la aplicación de ESCRITORIO
 customtkinter==5.2.1
 Pillow==10.1.0
+pygame==2.6.1

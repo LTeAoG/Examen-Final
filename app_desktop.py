@@ -1,5 +1,5 @@
 """
-InvenBank Pro - Aplicación de Escritorio Mejorada
+WareInc - Aplicación de Escritorio Mejorada
 Sistema Profesional de Gestión de Inventario y Ventas
 """
 
@@ -8,8 +8,10 @@ import os
 sys.path.insert(0, os.path.dirname(__file__))
 
 import customtkinter as ctk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import ttk, messagebox, filedialog, Canvas
 from datetime import datetime
+import pygame
+import random
 
 # Importar módulos del proyecto
 from src.models.database_manager import DatabaseManager
@@ -20,12 +22,13 @@ from config.settings import COLORS, ICONOS_DISPONIBLES, COLORES_DISPONIBLES, OPC
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
-class InvenBankApp:
+class WareIncApp:
     def __init__(self):
         self.db = DatabaseManager()
         self.root = ctk.CTk()
         self.root.title(APP_NAME)
-        self.root.geometry("1400x850")
+        self.root.geometry("1600x900")
+        self.root.minsize(1400, 800)
         
         # Variables
         self.productos = []
@@ -33,6 +36,16 @@ class InvenBankApp:
         self.producto_editando = None
         self.categoria_filtro = None
         self.orden_actual = 'orden_visualizacion'
+        self.musica_activa = True
+        
+        # Variables de animación navideña
+        self.copos_nieve = []
+        self.luces_arbol = []
+        self.santa_x = -200
+        self.santa_contador = 0
+        
+        # Inicializar música
+        self.iniciar_musica()
         
         # Construir interfaz
         self.build_ui()
@@ -47,39 +60,64 @@ class InvenBankApp:
         
         # Logo
         title_frame = ctk.CTkFrame(self.sidebar, fg_color="transparent")
-        title_frame.pack(pady=30, padx=20)
+        title_frame.pack(pady=20, padx=15)
         
-        ctk.CTkLabel(title_frame, text="💼", font=ctk.CTkFont(size=48)).pack()
-        ctk.CTkLabel(title_frame, text="InvenBank Pro", font=ctk.CTkFont(size=22, weight="bold"), 
+        ctk.CTkLabel(title_frame, text="💼", font=ctk.CTkFont(size=36)).pack()
+        ctk.CTkLabel(title_frame, text="WareInc", font=ctk.CTkFont(size=18, weight="bold"), 
                     text_color=COLORS['text_primary']).pack()
-        ctk.CTkLabel(title_frame, text="v2.0", font=ctk.CTkFont(size=11), 
+        ctk.CTkLabel(title_frame, text="v2.0", font=ctk.CTkFont(size=10), 
                     text_color=COLORS['text_secondary']).pack()
+        
+        # Control de música
+        music_frame = ctk.CTkFrame(self.sidebar, fg_color=COLORS['bg_card'], corner_radius=8)
+        music_frame.pack(pady=10, padx=15, fill="x")
+        
+        ctk.CTkLabel(music_frame, text="🎵 Música", font=ctk.CTkFont(size=11, weight="bold"),
+                    text_color=COLORS['text_primary']).pack(pady=(8, 4))
+        
+        self.btn_musica = ctk.CTkButton(music_frame, text="⏸ Pausar", width=90, height=28,
+                                        fg_color=COLORS['primary'], hover_color=COLORS['secondary'],
+                                        font=ctk.CTkFont(size=11),
+                                        command=self.toggle_musica)
+        self.btn_musica.pack(pady=(0, 8))
         
         # Botones de navegación
         self.nav_buttons = []
         self.create_nav_button("📊 Dashboard", "dashboard")
         self.create_nav_button("📦 Productos", "productos")
         self.create_nav_button("📁 Categorías", "categorias")
-        self.create_nav_button("💰 Ventas", "ventas")
+        self.create_nav_button("� Compras", "compras")
+        self.create_nav_button("�💰 Ventas", "ventas")
         self.create_nav_button("📜 Historial", "historial")
         self.create_nav_button("📈 Estadísticas", "estadisticas")
         
         # Info
-        ctk.CTkLabel(self.sidebar, text="", height=50).pack(expand=True)
-        info = ctk.CTkFrame(self.sidebar, fg_color=COLORS['bg_card'], corner_radius=10)
-        info.pack(side="bottom", pady=20, padx=20, fill="x")
-        ctk.CTkLabel(info, text=f"© {datetime.now().year}", font=ctk.CTkFont(size=10),
-                    text_color=COLORS['text_secondary']).pack(pady=5)
+        ctk.CTkLabel(self.sidebar, text="", height=20).pack(expand=True)
+        info = ctk.CTkFrame(self.sidebar, fg_color=COLORS['bg_card'], corner_radius=8)
+        info.pack(pady=10, padx=15, fill="x")
+        ctk.CTkLabel(info, text=f"© {datetime.now().year}", font=ctk.CTkFont(size=9),
+                    text_color=COLORS['text_secondary']).pack(pady=4)
         
-        # Contenedor principal
-        self.main_container = ctk.CTkFrame(self.root, fg_color=COLORS['bg_dark'], corner_radius=0)
-        self.main_container.pack(side="right", fill="both", expand=True)
+        # Contenedor principal con scroll
+        container_frame = ctk.CTkFrame(self.root, fg_color=COLORS['bg_dark'], corner_radius=0)
+        container_frame.pack(side="right", fill="both", expand=True)
+        
+        # Canvas de fondo para animaciones navideñas
+        self.canvas_fondo = Canvas(container_frame, bg=COLORS['bg_dark'], highlightthickness=0)
+        self.canvas_fondo.place(x=0, y=0, relwidth=1, relheight=1)
+        
+        self.main_container = ctk.CTkScrollableFrame(container_frame, fg_color="transparent", corner_radius=0)
+        self.main_container.place(x=0, y=0, relwidth=1, relheight=1)
+        
+        # Iniciar animaciones navideñas
+        self.iniciar_animaciones_navidad()
         
         # Crear frames
         self.frames = {}
         self.create_dashboard_frame()
         self.create_productos_frame()
         self.create_categorias_frame()
+        self.create_compras_frame()
         self.create_ventas_frame()
         self.create_historial_frame()
         self.create_estadisticas_frame()
@@ -87,11 +125,11 @@ class InvenBankApp:
         self.show_frame("dashboard")
         
     def create_nav_button(self, text, frame_name):
-        btn = ctk.CTkButton(self.sidebar, text=text, font=ctk.CTkFont(size=14, weight="bold"),
+        btn = ctk.CTkButton(self.sidebar, text=text, font=ctk.CTkFont(size=12, weight="bold"),
                            fg_color="transparent", text_color=COLORS['text_secondary'],
-                           hover_color=COLORS['bg_card'], anchor="w", height=50, corner_radius=10,
+                           hover_color=COLORS['bg_card'], anchor="w", height=38, corner_radius=8,
                            command=lambda: self.show_frame(frame_name))
-        btn.pack(pady=5, padx=20, fill="x")
+        btn.pack(pady=3, padx=15, fill="x")
         self.nav_buttons.append((btn, frame_name))
         return btn
         
@@ -123,10 +161,10 @@ class InvenBankApp:
         self.frames["dashboard"] = frame
         
         header = self.create_header("Dashboard", "Vista general del sistema")
-        header.pack(fill="x", padx=30, pady=20)
+        header.pack(fill="x", padx=20, pady=10)
         
         stats_container = ctk.CTkFrame(frame, fg_color="transparent")
-        stats_container.pack(fill="x", padx=30, pady=10)
+        stats_container.pack(fill="x", padx=20, pady=5)
         
         self.stat_cards = {}
         stats = [
@@ -143,7 +181,7 @@ class InvenBankApp:
             self.stat_cards[key] = card
         
         products_section = ctk.CTkFrame(frame, fg_color=COLORS['bg_card'], corner_radius=15)
-        products_section.pack(fill="both", expand=True, padx=30, pady=10)
+        products_section.pack(fill="both", expand=True, padx=20, pady=5)
         
         ctk.CTkLabel(products_section, text="⚠️ Stock Bajo", font=ctk.CTkFont(size=18, weight="bold"),
                     text_color=COLORS['text_primary']).pack(anchor="w", padx=20, pady=15)
@@ -155,14 +193,14 @@ class InvenBankApp:
         self.frames["productos"] = frame
         
         header = self.create_header("Gestión de Productos", "Administra tu inventario")
-        header.pack(fill="x", padx=30, pady=20)
+        header.pack(fill="x", padx=20, pady=10)
         
         content = ctk.CTkFrame(frame, fg_color="transparent")
-        content.pack(fill="both", expand=True, padx=30, pady=10)
+        content.pack(fill="both", expand=True, padx=20, pady=5)
         
         # Panel izquierdo: Formulario
-        left = ctk.CTkScrollableFrame(content, fg_color=COLORS['bg_card'], corner_radius=15, width=420)
-        left.pack(side="left", fill="y", padx=(0, 15))
+        left = ctk.CTkScrollableFrame(content, fg_color=COLORS['bg_card'], corner_radius=15, width=450)
+        left.pack(side="left", fill="both", padx=(0, 15))
         left.pack_propagate(False)
         
         ctk.CTkLabel(left, text="➕ Agregar/Editar Producto", font=ctk.CTkFont(size=18, weight="bold"),
@@ -175,30 +213,34 @@ class InvenBankApp:
         
         # Campos
         for field, label, tipo in [
-            ("nombre", "Nombre *", "entry"),
+            ("nombre", "Nombre del Producto *", "entry"),
             ("descripcion", "Descripción", "text"),
             ("categoria", "Categoría *", "combo"),
             ("precio", "Precio de Venta *", "entry"),
             ("costo", "Costo de Compra *", "entry"),
-            ("cantidad", "Cantidad *", "entry"),
+            ("cantidad", "Cantidad en Stock *", "entry"),
             ("instrucciones", "Instrucciones de Manejo", "text"),
-            ("uso", "Uso Específico", "text"),
+            ("uso", "Uso Específico del Producto", "text"),
             ("notas", "Notas Adicionales", "text")
         ]:
-            ctk.CTkLabel(form, text=label, font=ctk.CTkFont(size=12), 
-                        text_color=COLORS['text_secondary']).pack(anchor="w", pady=(10, 5))
+            ctk.CTkLabel(form, text=label, font=ctk.CTkFont(size=13), 
+                        text_color=COLORS['text_secondary']).pack(anchor="w", pady=(12, 5))
             
             if tipo == "entry":
-                entry = ctk.CTkEntry(form, height=40, corner_radius=10, border_width=0, fg_color=COLORS['bg_dark'])
+                entry = ctk.CTkEntry(form, height=42, corner_radius=10, border_width=0, 
+                                    fg_color=COLORS['bg_dark'], font=ctk.CTkFont(size=12),
+                                    placeholder_text=label.replace(' *', ''))
                 entry.pack(fill="x")
                 self.producto_entries[field] = entry
             elif tipo == "text":
-                entry = ctk.CTkTextbox(form, height=60, corner_radius=10, border_width=0, fg_color=COLORS['bg_dark'])
+                entry = ctk.CTkTextbox(form, height=70, corner_radius=10, border_width=0, 
+                                      fg_color=COLORS['bg_dark'], font=ctk.CTkFont(size=12))
                 entry.pack(fill="x")
                 self.producto_entries[field] = entry
             elif tipo == "combo":
-                entry = ctk.CTkComboBox(form, values=["Cargando..."], height=40, corner_radius=10, 
-                                       border_width=0, fg_color=COLORS['bg_dark'])
+                entry = ctk.CTkComboBox(form, values=["Cargando..."], height=42, corner_radius=10, 
+                                       border_width=0, fg_color=COLORS['bg_dark'], font=ctk.CTkFont(size=12),
+                                       state="readonly")
                 entry.pack(fill="x")
                 self.producto_entries[field] = entry
         
@@ -206,17 +248,17 @@ class InvenBankApp:
         buttons = ctk.CTkFrame(form, fg_color="transparent")
         buttons.pack(fill="x", pady=20)
         
-        self.btn_guardar = ctk.CTkButton(buttons, text="💾 Guardar", font=ctk.CTkFont(size=14, weight="bold"),
-                                         height=45, corner_radius=10, fg_color=COLORS['accent'], 
+        self.btn_guardar = ctk.CTkButton(buttons, text="💾 Guardar Producto", font=ctk.CTkFont(size=15, weight="bold"),
+                                         height=50, corner_radius=10, fg_color=COLORS['accent'], 
                                          hover_color="#059669", command=self.guardar_producto)
         self.btn_guardar.pack(fill="x", pady=5)
         
-        ctk.CTkButton(buttons, text="🗑️ Limpiar", font=ctk.CTkFont(size=14, weight="bold"),
+        ctk.CTkButton(buttons, text="🗑️ Limpiar Formulario", font=ctk.CTkFont(size=14, weight="bold"),
                      height=45, corner_radius=10, fg_color=COLORS['bg_dark'], 
                      command=self.limpiar_form_producto).pack(fill="x", pady=5)
         
-        # Panel derecho: Lista
-        right = ctk.CTkFrame(content, fg_color=COLORS['bg_card'], corner_radius=15)
+        # Panel derecho: Lista con scroll
+        right = ctk.CTkScrollableFrame(content, fg_color=COLORS['bg_card'], corner_radius=15)
         right.pack(side="right", fill="both", expand=True)
         
         table_header = ctk.CTkFrame(right, fg_color="transparent")
@@ -238,19 +280,20 @@ class InvenBankApp:
         ctk.CTkButton(filters, text="🔄", width=35, height=35, corner_radius=10,
                      fg_color=COLORS['primary'], command=self.cargar_productos).pack(side="left")
         
-        self.productos_tree = self.create_table(right, ["ID", "Producto", "Categoría", "Precio", "Stock", ""], 
-                                               [50, 250, 120, 100, 80, 150])
+        self.productos_tree = self.create_table(right, ["ID", "Producto", "Categoría", "Precio", "Stock", "Acciones"], 
+                                               [50, 300, 150, 100, 80, 120])
         self.productos_tree.tree.bind('<Double-1>', lambda e: self.editar_producto_desde_tabla())
+        self.productos_tree.tree.bind('<Button-1>', lambda e: self.click_en_tabla(e, 'productos'))
     
     def create_categorias_frame(self):
         frame = ctk.CTkFrame(self.main_container, fg_color="transparent")
         self.frames["categorias"] = frame
         
         header = self.create_header("Gestión de Categorías", "Organiza tus productos en carpetas")
-        header.pack(fill="x", padx=30, pady=20)
+        header.pack(fill="x", padx=20, pady=10)
         
         content = ctk.CTkFrame(frame, fg_color="transparent")
-        content.pack(fill="both", expand=True, padx=30, pady=10)
+        content.pack(fill="both", expand=True, padx=20, pady=5)
         
         # Formulario
         left = ctk.CTkFrame(content, fg_color=COLORS['bg_card'], corner_radius=15, width=400)
@@ -268,14 +311,17 @@ class InvenBankApp:
         ctk.CTkLabel(cat_form, text="Nombre *", font=ctk.CTkFont(size=12),
                     text_color=COLORS['text_secondary']).pack(anchor="w", pady=(10, 5))
         self.cat_entries['nombre'] = ctk.CTkEntry(cat_form, height=40, corner_radius=10, 
-                                                  border_width=0, fg_color=COLORS['bg_dark'])
+                                                  border_width=0, fg_color=COLORS['bg_dark'],
+                                                  placeholder_text="Nombre de la categoría")
         self.cat_entries['nombre'].pack(fill="x")
         
         ctk.CTkLabel(cat_form, text="Descripción", font=ctk.CTkFont(size=12),
                     text_color=COLORS['text_secondary']).pack(anchor="w", pady=(10, 5))
         self.cat_entries['descripcion'] = ctk.CTkTextbox(cat_form, height=80, corner_radius=10,
-                                                         border_width=0, fg_color=COLORS['bg_dark'])
+                                                         border_width=0, fg_color=COLORS['bg_dark'],
+                                                         font=ctk.CTkFont(size=11), activate_scrollbars=True)
         self.cat_entries['descripcion'].pack(fill="x")
+        self.cat_entries['descripcion'].insert("1.0", "")  # Asegurar que está vacío y editable
         
         ctk.CTkLabel(cat_form, text="Color", font=ctk.CTkFont(size=12),
                     text_color=COLORS['text_secondary']).pack(anchor="w", pady=(10, 5))
@@ -293,22 +339,105 @@ class InvenBankApp:
                      height=45, corner_radius=10, fg_color=COLORS['accent'], 
                      command=self.guardar_categoria).pack(fill="x", pady=20)
         
-        # Lista
-        right = ctk.CTkFrame(content, fg_color=COLORS['bg_card'], corner_radius=15)
+        # Lista con scroll
+        right = ctk.CTkScrollableFrame(content, fg_color=COLORS['bg_card'], corner_radius=15)
         right.pack(side="right", fill="both", expand=True)
         
         ctk.CTkLabel(right, text="📁 Categorías Creadas", font=ctk.CTkFont(size=18, weight="bold"),
                     text_color=COLORS['text_primary']).pack(anchor="w", padx=20, pady=15)
         
         self.categorias_tree = self.create_table(right, ["ID", "Icono", "Nombre", "Productos", "Acciones"],
-                                                [50, 60, 200, 100, 150])
+                                                [50, 80, 250, 100, 120])
+        self.categorias_tree.tree.bind('<Button-1>', lambda e: self.click_en_tabla(e, 'categorias'))
+    
+    def create_compras_frame(self):
+        frame = ctk.CTkFrame(self.main_container, fg_color="transparent")
+        self.frames["compras"] = frame
+        
+        header = self.create_header("Gestión de Compras", "Reponer stock de productos")
+        header.pack(fill="x", padx=20, pady=10)
+        
+        content = ctk.CTkFrame(frame, fg_color="transparent")
+        content.pack(fill="both", expand=True, padx=20, pady=5)
+        
+        # Panel izquierdo: Formulario de compra
+        left = ctk.CTkFrame(content, fg_color=COLORS['bg_card'], corner_radius=15, width=450)
+        left.pack(side="left", fill="both", padx=(0, 15))
+        left.pack_propagate(False)
+        
+        ctk.CTkLabel(left, text="🛒 Nueva Compra", font=ctk.CTkFont(size=18, weight="bold"),
+                    text_color=COLORS['text_primary']).pack(pady=20, padx=20, anchor="w")
+        
+        compra_form = ctk.CTkFrame(left, fg_color="transparent")
+        compra_form.pack(fill="both", expand=True, padx=20, pady=10)
+        
+        # Selector de producto
+        ctk.CTkLabel(compra_form, text="Producto a Comprar *", font=ctk.CTkFont(size=13),
+                    text_color=COLORS['text_secondary']).pack(anchor="w", pady=(0, 5))
+        self.compra_producto = ctk.CTkComboBox(compra_form, values=["Cargando..."], height=42,
+                                              corner_radius=10, border_width=0, fg_color=COLORS['bg_dark'],
+                                              font=ctk.CTkFont(size=12), state="readonly")
+        self.compra_producto.pack(fill="x", pady=(0, 15))
+        
+        # Cantidad a comprar
+        ctk.CTkLabel(compra_form, text="Cantidad *", font=ctk.CTkFont(size=13),
+                    text_color=COLORS['text_secondary']).pack(anchor="w", pady=(0, 5))
+        self.compra_cantidad = ctk.CTkEntry(compra_form, height=42, corner_radius=10, border_width=0,
+                                           fg_color=COLORS['bg_dark'], font=ctk.CTkFont(size=12),
+                                           placeholder_text="Cantidad a comprar")
+        self.compra_cantidad.pack(fill="x", pady=(0, 15))
+        
+        # Costo unitario
+        ctk.CTkLabel(compra_form, text="Costo Unitario *", font=ctk.CTkFont(size=13),
+                    text_color=COLORS['text_secondary']).pack(anchor="w", pady=(0, 5))
+        self.compra_costo = ctk.CTkEntry(compra_form, height=42, corner_radius=10, border_width=0,
+                                        fg_color=COLORS['bg_dark'], font=ctk.CTkFont(size=12),
+                                        placeholder_text="Costo por unidad")
+        self.compra_costo.pack(fill="x", pady=(0, 15))
+        
+        # Proveedor
+        ctk.CTkLabel(compra_form, text="Proveedor", font=ctk.CTkFont(size=13),
+                    text_color=COLORS['text_secondary']).pack(anchor="w", pady=(0, 5))
+        self.compra_proveedor = ctk.CTkEntry(compra_form, height=42, corner_radius=10, border_width=0,
+                                            fg_color=COLORS['bg_dark'], font=ctk.CTkFont(size=12),
+                                            placeholder_text="Nombre del proveedor")
+        self.compra_proveedor.pack(fill="x", pady=(0, 15))
+        
+        # Info de compra
+        info_compra = ctk.CTkFrame(compra_form, fg_color=COLORS['bg_dark'], corner_radius=10)
+        info_compra.pack(fill="x", pady=(10, 20))
+        
+        ctk.CTkLabel(info_compra, text="Total de Compra:", font=ctk.CTkFont(size=12),
+                    text_color=COLORS['text_secondary']).pack(pady=(10, 5))
+        self.compra_total_label = ctk.CTkLabel(info_compra, text="$0.00", font=ctk.CTkFont(size=24, weight="bold"),
+                                              text_color=COLORS['accent'])
+        self.compra_total_label.pack(pady=(0, 10))
+        
+        # Botones
+        ctk.CTkButton(compra_form, text="🛒 Realizar Compra", font=ctk.CTkFont(size=15, weight="bold"),
+                     height=50, corner_radius=10, fg_color=COLORS['primary'],
+                     hover_color=COLORS['secondary'], command=self.procesar_compra).pack(fill="x", pady=5)
+        
+        # Vincular eventos para calcular total
+        self.compra_cantidad.bind('<KeyRelease>', self.actualizar_total_compra)
+        self.compra_costo.bind('<KeyRelease>', self.actualizar_total_compra)
+        
+        # Panel derecho: Historial de compras
+        right = ctk.CTkScrollableFrame(content, fg_color=COLORS['bg_card'], corner_radius=15)
+        right.pack(side="right", fill="both", expand=True)
+        
+        ctk.CTkLabel(right, text="📋 Historial de Compras", font=ctk.CTkFont(size=18, weight="bold"),
+                    text_color=COLORS['text_primary']).pack(anchor="w", padx=20, pady=15)
+        
+        self.compras_tree = self.create_table(right, ["ID", "Producto", "Cant.", "Costo Unit.", "Total", "Proveedor", "Fecha"],
+                                             [40, 200, 60, 90, 90, 150, 150])
     
     def create_ventas_frame(self):
         frame = ctk.CTkFrame(self.main_container, fg_color="transparent")
         self.frames["ventas"] = frame
         
         header = self.create_header("Punto de Venta", "Procesar ventas")
-        header.pack(fill="x", padx=30, pady=20)
+        header.pack(fill="x", padx=20, pady=10)
         
         content = ctk.CTkFrame(frame, fg_color="transparent")
         content.pack(fill="both", expand=True, padx=30, pady=10)
@@ -370,10 +499,10 @@ class InvenBankApp:
         self.frames["historial"] = frame
         
         header = self.create_header("Historial", "Registro de ventas")
-        header.pack(fill="x", padx=30, pady=20)
+        header.pack(fill="x", padx=20, pady=10)
         
         content = ctk.CTkFrame(frame, fg_color=COLORS['bg_card'], corner_radius=15)
-        content.pack(fill="both", expand=True, padx=30, pady=10)
+        content.pack(fill="both", expand=True, padx=20, pady=5)
         
         table_header = ctk.CTkFrame(content, fg_color="transparent")
         table_header.pack(fill="x", padx=20, pady=15)
@@ -397,10 +526,10 @@ class InvenBankApp:
         self.frames["estadisticas"] = frame
         
         header = self.create_header("Estadísticas", "Análisis del negocio")
-        header.pack(fill="x", padx=30, pady=20)
+        header.pack(fill="x", padx=20, pady=10)
         
         grid = ctk.CTkFrame(frame, fg_color="transparent")
-        grid.pack(fill="both", expand=True, padx=30, pady=10)
+        grid.pack(fill="both", expand=True, padx=20, pady=5)
         
         self.stat_labels = {}
         
@@ -428,10 +557,10 @@ class InvenBankApp:
     
     def create_header(self, title, subtitle):
         header = ctk.CTkFrame(self.main_container, fg_color="transparent")
-        ctk.CTkLabel(header, text=title, font=ctk.CTkFont(size=28, weight="bold"),
-                    text_color=COLORS['text_primary']).pack(anchor="w")
-        ctk.CTkLabel(header, text=subtitle, font=ctk.CTkFont(size=14),
-                    text_color=COLORS['text_secondary']).pack(anchor="w", pady=(5, 0))
+        ctk.CTkLabel(header, text=title, font=ctk.CTkFont(size=20, weight="bold"),
+                    text_color=COLORS['text_primary']).pack(side="left", padx=(0, 15))
+        ctk.CTkLabel(header, text=subtitle, font=ctk.CTkFont(size=11),
+                    text_color=COLORS['text_secondary']).pack(side="left")
         return header
     
     def create_stat_card(self, parent, title, value, color):
@@ -467,9 +596,9 @@ class InvenBankApp:
         style = ttk.Style()
         style.theme_use("clam")
         style.configure("Modern.Treeview", background=COLORS['bg_dark'], foreground=COLORS['text_primary'],
-                       fieldbackground=COLORS['bg_dark'], borderwidth=0, rowheight=40)
+                       fieldbackground=COLORS['bg_dark'], borderwidth=0, rowheight=50, font=('Segoe UI', 11))
         style.configure("Modern.Treeview.Heading", background=COLORS['bg_card'], 
-                       foreground=COLORS['text_primary'], borderwidth=0, relief="flat")
+                       foreground=COLORS['text_primary'], borderwidth=0, relief="flat", font=('Segoe UI', 12, 'bold'))
         style.map("Modern.Treeview", background=[('selected', COLORS['primary'])],
                  foreground=[('selected', COLORS['text_primary'])])
         
@@ -502,7 +631,9 @@ class InvenBankApp:
         self.cargar_productos()
         self.cargar_combo_categorias()
         self.cargar_combo_productos_venta()
+        self.cargar_combo_productos_compra()
         self.cargar_ventas_recientes()
+        self.cargar_compras_recientes()
     
     def actualizar_dashboard(self):
         try:
@@ -530,8 +661,9 @@ class InvenBankApp:
             for item in tree.get_children():
                 tree.delete(item)
             for p in self.productos:
-                cat_nombre = p[11] if p[11] else "Sin categoría"
-                tree.insert('', 'end', values=(p[0], p[1], cat_nombre, formatear_moneda(p[3]), p[4], "✏️ 🗑️"))
+                # p tiene: id, nombre, desc, precio, cantidad, categoria_id, instrucciones, uso, notas, orden, fecha, cat_nombre, color, icono
+                cat_nombre = p[11] if len(p) > 11 and p[11] else "Sin categoría"
+                tree.insert('', 'end', values=(p[0], p[1][:40], cat_nombre[:20], formatear_moneda(p[3]), p[4], "✏️ 🗑️"))
         except Exception as e:
             messagebox.showerror("Error", f"Error al cargar productos: {e}")
     
@@ -542,8 +674,10 @@ class InvenBankApp:
             for item in tree.get_children():
                 tree.delete(item)
             for c in self.categorias:
+                # c tiene: id, nombre, descripcion, color, icono, fecha
                 prods = self.db.obtener_productos_por_categoria(c[0])
-                tree.insert('', 'end', values=(c[0], c[4], c[1], len(prods), "✏️ 🗑️"))
+                icono = c[4] if len(c) > 4 else "📦"
+                tree.insert('', 'end', values=(c[0], icono, c[1], len(prods), "✏️ 🗑️"))
         except Exception as e:
             messagebox.showerror("Error", f"Error al cargar categorías: {e}")
     
@@ -551,18 +685,26 @@ class InvenBankApp:
         categorias = self.db.obtener_categorias()
         nombres = [f"{c[4]} {c[1]}" for c in categorias]
         if nombres:
-            self.producto_entries['categoria'].configure(values=nombres)
-            self.producto_entries['categoria'].set(nombres[0])
+            self.producto_entries["categoria"].configure(values=nombres)
+            self.producto_entries["categoria"].set(nombres[0])
+        else:
+            self.producto_entries["categoria"].configure(values=["Sin categorías"])
+            self.producto_entries["categoria"].set("Sin categorías")
     
     def cargar_combo_productos_venta(self):
-        productos = self.db.obtener_productos()
-        nombres = [f"{p[1]} (Stock: {p[4]})" for p in productos if p[4] > 0]
-        if nombres:
-            self.venta_producto.configure(values=nombres)
-            self.venta_producto.set(nombres[0])
-        else:
-            self.venta_producto.configure(values=["Sin productos"])
-            self.venta_producto.set("Sin productos")
+        try:
+            productos = self.db.obtener_productos()
+            nombres = [f"{p[1]} (Stock: {p[4]})" for p in productos if p[4] > 0]
+            if nombres:
+                self.venta_producto.configure(values=nombres)
+                if len(nombres) > 0:
+                    self.venta_producto.set(nombres[0])
+                    self.actualizar_info_venta()
+            else:
+                self.venta_producto.configure(values=["Sin productos"])
+                self.venta_producto.set("Sin productos")
+        except Exception as e:
+            print(f"Error al cargar combo ventas: {e}")
     
     def cargar_ventas_recientes(self):
         ventas = self.db.obtener_ventas(10)
@@ -601,14 +743,82 @@ class InvenBankApp:
                 self.cargar_productos()
                 break
     
+    def click_en_tabla(self, event, tipo):
+        """Maneja clics en las tablas para acciones de editar/eliminar"""
+        if tipo == 'productos':
+            tree = self.productos_tree.tree
+        elif tipo == 'categorias':
+            tree = self.categorias_tree.tree
+        else:
+            return
+        
+        region = tree.identify("region", event.x, event.y)
+        if region != "cell":
+            return
+        
+        column = tree.identify_column(event.x)
+        row_id = tree.identify_row(event.y)
+        
+        if not row_id:
+            return
+        
+        item = tree.item(row_id)
+        values = item['values']
+        
+        if not values:
+            return
+        
+        # Obtener número de columna (empieza en 1)
+        col_num = int(column.replace('#', ''))
+        num_cols = len(tree['columns'])
+        
+        # Si es la última columna (Acciones)
+        if col_num == num_cols:
+            try:
+                bbox = tree.bbox(row_id, column)
+                if bbox:
+                    x_offset = event.x - bbox[0]
+                    col_width = bbox[2]
+                    
+                    # Si hace clic en la primera mitad = editar (✏️)
+                    if x_offset < col_width / 2:
+                        if tipo == 'productos':
+                            self.editar_producto(values[0])
+                        elif tipo == 'categorias':
+                            self.editar_categoria(values[0])
+                    else:  # Segunda mitad = eliminar (🗑️)
+                        if tipo == 'productos':
+                            self.eliminar_producto(values[0])
+                        elif tipo == 'categorias':
+                            self.eliminar_categoria(values[0])
+            except Exception as e:
+                print(f"Error al procesar clic: {e}")
+    
     def guardar_producto(self):
         try:
             nombre = self.producto_entries['nombre'].get().strip()
             desc = self.producto_entries['descripcion'].get("1.0", "end-1c").strip()
             cat_sel = self.producto_entries['categoria'].get()
-            precio = float(self.producto_entries['precio'].get())
-            costo = float(self.producto_entries['costo'].get())
-            cant = int(self.producto_entries['cantidad'].get())
+            
+            # Validar campos numéricos
+            try:
+                precio = float(self.producto_entries['precio'].get().strip())
+            except ValueError:
+                messagebox.showerror("Error", "El precio debe ser un número válido")
+                return
+            
+            try:
+                costo = float(self.producto_entries['costo'].get().strip())
+            except ValueError:
+                messagebox.showerror("Error", "El costo debe ser un número válido")
+                return
+            
+            try:
+                cant = int(self.producto_entries['cantidad'].get().strip())
+            except ValueError:
+                messagebox.showerror("Error", "La cantidad debe ser un número entero")
+                return
+            
             inst = self.producto_entries['instrucciones'].get("1.0", "end-1c").strip()
             uso = self.producto_entries['uso'].get("1.0", "end-1c").strip()
             notas = self.producto_entries['notas'].get("1.0", "end-1c").strip()
@@ -617,31 +827,39 @@ class InvenBankApp:
                 messagebox.showwarning("Advertencia", "El nombre es obligatorio")
                 return
             
+            if precio <= 0:
+                messagebox.showwarning("Advertencia", "El precio debe ser mayor a 0")
+                return
+            
+            if cant < 0:
+                messagebox.showwarning("Advertencia", "La cantidad no puede ser negativa")
+                return
+            
             # Obtener ID de categoría
             cat_id = None
-            for c in self.categorias:
-                if f"{c[4]} {c[1]}" == cat_sel:
-                    cat_id = c[0]
-                    break
+            if cat_sel and cat_sel != "Cargando..." and cat_sel != "Sin categorías":
+                for c in self.categorias:
+                    if f"{c[4]} {c[1]}" == cat_sel:
+                        cat_id = c[0]
+                        break
             
             if self.producto_editando:
                 self.db.actualizar_producto(self.producto_editando, nombre, desc, precio, cant, cat_id, inst, uso, notas)
-                messagebox.showinfo("Éxito", "Producto actualizado")
+                messagebox.showinfo("✅ Éxito", "Producto actualizado correctamente")
             else:
+                # Parámetros: nombre, descripcion, precio, cantidad, categoria_id, costo_compra, instrucciones, uso, notas
                 resultado = self.db.agregar_producto(nombre, desc, precio, cant, cat_id, costo, inst, uso, notas)
-                if resultado[0]:
-                    messagebox.showinfo("Éxito", "Producto agregado")
+                if resultado[0] is not None:
+                    messagebox.showinfo("✅ Éxito", f"Producto '{nombre}' agregado correctamente con ID: {resultado[0]}")
                 else:
-                    messagebox.showerror("Error", resultado[1])
+                    messagebox.showerror("❌ Error", resultado[1])
             
             self.limpiar_form_producto()
             self.cargar_productos()
             self.cargar_combo_productos_venta()
             self.actualizar_dashboard()
-        except ValueError:
-            messagebox.showerror("Error", "Valores inválidos")
         except Exception as e:
-            messagebox.showerror("Error", str(e))
+            messagebox.showerror("Error", f"Error al guardar producto: {str(e)}")
     
     def limpiar_form_producto(self):
         self.producto_entries['nombre'].delete(0, 'end')
@@ -656,25 +874,103 @@ class InvenBankApp:
         self.btn_guardar.configure(text="💾 Guardar")
     
     def editar_producto_desde_tabla(self):
+        """Edita un producto desde la tabla con doble clic"""
         tree = self.productos_tree.tree
         sel = tree.selection()
         if not sel:
             return
         prod_id = tree.item(sel[0])['values'][0]
+        self.editar_producto(prod_id)
+    
+    def editar_producto(self, producto_id):
+        """Carga los datos del producto en el formulario"""
         for p in self.productos:
-            if p[0] == prod_id:
+            if p[0] == producto_id:
+                self.producto_entries['nombre'].delete(0, 'end')
                 self.producto_entries['nombre'].insert(0, p[1])
-                self.producto_entries['descripcion'].insert("1.0", p[2] or "")
+                
+                self.producto_entries['descripcion'].delete("1.0", "end")
+                self.producto_entries['descripcion'].insert("1.0", p[2] if p[2] else "")
+                
+                # Seleccionar categoría correcta
+                if p[5]:  # categoria_id
+                    for c in self.categorias:
+                        if c[0] == p[5]:
+                            self.producto_entries['categoria'].set(f"{c[4]} {c[1]}")
+                            break
+                
+                self.producto_entries['precio'].delete(0, 'end')
                 self.producto_entries['precio'].insert(0, str(p[3]))
+                
+                self.producto_entries['costo'].delete(0, 'end')
                 self.producto_entries['costo'].insert(0, str(p[3]))
+                
+                self.producto_entries['cantidad'].delete(0, 'end')
                 self.producto_entries['cantidad'].insert(0, str(p[4]))
-                self.producto_entries['instrucciones'].insert("1.0", p[6] or "")
-                self.producto_entries['uso'].insert("1.0", p[7] or "")
-                self.producto_entries['notas'].insert("1.0", p[8] or "")
-                self.producto_editando = prod_id
-                self.btn_guardar.configure(text="✏️ Actualizar")
+                
+                self.producto_entries['instrucciones'].delete("1.0", "end")
+                self.producto_entries['instrucciones'].insert("1.0", p[6] if p[6] else "")
+                
+                self.producto_entries['uso'].delete("1.0", "end")
+                self.producto_entries['uso'].insert("1.0", p[7] if p[7] else "")
+                
+                self.producto_entries['notas'].delete("1.0", "end")
+                self.producto_entries['notas'].insert("1.0", p[8] if p[8] else "")
+                
+                self.producto_editando = producto_id
+                self.btn_guardar.configure(text="✏️ Actualizar Producto")
                 self.show_frame("productos")
                 break
+    
+    def eliminar_producto(self, producto_id):
+        """Elimina un producto"""
+        respuesta = messagebox.askyesno("Confirmar", "¿Eliminar este producto?")
+        if respuesta:
+            try:
+                self.db.eliminar_producto(producto_id)
+                messagebox.showinfo("Éxito", "Producto eliminado")
+                self.cargar_productos()
+                self.cargar_combo_productos_venta()
+                self.actualizar_dashboard()
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo eliminar: {e}")
+    
+    def editar_categoria(self, categoria_id):
+        """Edita una categoría"""
+        for c in self.categorias:
+            if c[0] == categoria_id:
+                self.cat_entries['nombre'].delete(0, 'end')
+                self.cat_entries['nombre'].insert(0, c[1])
+                
+                self.cat_entries['descripcion'].delete("1.0", "end")
+                self.cat_entries['descripcion'].insert("1.0", c[2] if c[2] else "")
+                
+                self.cat_entries['icono'].set(c[4])
+                
+                # Buscar color por nombre
+                for hex_val, nombre_color in COLORES_DISPONIBLES:
+                    if hex_val == c[3]:
+                        self.cat_entries['color'].set(nombre_color)
+                        break
+                
+                self.show_frame("categorias")
+                messagebox.showinfo("Info", "Modifica los datos y guarda para actualizar")
+                break
+    
+    def eliminar_categoria(self, categoria_id):
+        """Elimina una categoría"""
+        respuesta = messagebox.askyesno("Confirmar", "¿Eliminar esta categoría?")
+        if respuesta:
+            try:
+                resultado = self.db.eliminar_categoria(categoria_id)
+                if resultado[0]:
+                    messagebox.showinfo("Éxito", "Categoría eliminada")
+                    self.cargar_categorias()
+                    self.cargar_combo_categorias()
+                else:
+                    messagebox.showwarning("Advertencia", resultado[1])
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo eliminar: {e}")
     
     def guardar_categoria(self):
         try:
@@ -823,10 +1119,340 @@ class InvenBankApp:
         ctk.CTkButton(btns, text="✕ Cancelar", font=ctk.CTkFont(size=14, weight="bold"), height=45,
                      corner_radius=10, fg_color=COLORS['danger'], command=modal.destroy).pack(side="right", fill="x", expand=True, padx=(5, 0))
     
+    def cargar_combo_productos_compra(self):
+        """Carga los productos en el combo de compras"""
+        try:
+            productos = self.db.obtener_productos()
+            nombres = [f"{p[1]}" for p in productos]
+            if nombres:
+                self.compra_producto.configure(values=nombres)
+                self.compra_producto.set(nombres[0])
+            else:
+                self.compra_producto.configure(values=["Sin productos"])
+                self.compra_producto.set("Sin productos")
+        except Exception as e:
+            print(f"Error al cargar combo compras: {e}")
+    
+    def actualizar_total_compra(self, event=None):
+        """Actualiza el total de la compra"""
+        try:
+            cantidad = int(self.compra_cantidad.get() or 0)
+            costo = float(self.compra_costo.get() or 0)
+            total = cantidad * costo
+            self.compra_total_label.configure(text=formatear_moneda(total))
+        except:
+            self.compra_total_label.configure(text="$0.00")
+    
+    def procesar_compra(self):
+        """Procesa una compra de reposición de stock"""
+        try:
+            producto_sel = self.compra_producto.get()
+            if not producto_sel or producto_sel == "Sin productos":
+                messagebox.showwarning("Advertencia", "Selecciona un producto")
+                return
+            
+            cantidad = int(self.compra_cantidad.get())
+            costo_unitario = float(self.compra_costo.get())
+            proveedor = self.compra_proveedor.get().strip() or "Proveedor General"
+            
+            if cantidad <= 0:
+                messagebox.showwarning("Advertencia", "La cantidad debe ser mayor a 0")
+                return
+            
+            if costo_unitario <= 0:
+                messagebox.showwarning("Advertencia", "El costo debe ser mayor a 0")
+                return
+            
+            # Buscar el producto
+            producto_id = None
+            for p in self.productos:
+                if p[1] == producto_sel:
+                    producto_id = p[0]
+                    break
+            
+            if not producto_id:
+                messagebox.showerror("Error", "Producto no encontrado")
+                return
+            
+            total = cantidad * costo_unitario
+            
+            # Verificar presupuesto
+            capital, _ = self.db.obtener_presupuesto()
+            if capital < total:
+                messagebox.showerror("Error", f"Presupuesto insuficiente. Disponible: {formatear_moneda(capital)}, Necesario: {formatear_moneda(total)}")
+                return
+            
+            # Registrar compra en historial
+            fecha = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            conn = self.db.get_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                INSERT INTO compras (producto_id, producto_nombre, cantidad, costo_unitario, total, proveedor, fecha)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (producto_id, producto_sel, cantidad, costo_unitario, total, proveedor, fecha))
+            
+            # Actualizar stock del producto
+            cursor.execute('''
+                UPDATE productos 
+                SET cantidad = cantidad + ?
+                WHERE id = ?
+            ''', (cantidad, producto_id))
+            
+            # Descontar del presupuesto
+            cursor.execute('''
+                UPDATE presupuesto 
+                SET capital = capital - ?, ultima_actualizacion = ?
+                WHERE id = 1
+            ''', (total, fecha))
+            
+            conn.commit()
+            conn.close()
+            
+            messagebox.showinfo("✅ Éxito", f"Compra realizada: {cantidad} unidades de {producto_sel}")
+            
+            # Limpiar formulario
+            self.compra_cantidad.delete(0, 'end')
+            self.compra_costo.delete(0, 'end')
+            self.compra_proveedor.delete(0, 'end')
+            self.compra_total_label.configure(text="$0.00")
+            
+            # Actualizar datos
+            self.cargar_productos()
+            self.cargar_compras_recientes()
+            self.cargar_combo_productos_venta()
+            self.actualizar_dashboard()
+            
+        except ValueError:
+            messagebox.showerror("Error", "Valores numéricos inválidos")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al procesar compra: {str(e)}")
+    
+    def cargar_compras_recientes(self):
+        """Carga el historial de compras"""
+        try:
+            conn = self.db.get_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                SELECT id, producto_nombre, cantidad, costo_unitario, total, proveedor, fecha
+                FROM compras
+                ORDER BY fecha DESC
+                LIMIT 100
+            ''')
+            
+            compras = cursor.fetchall()
+            conn.close()
+            
+            tree = self.compras_tree.tree
+            for item in tree.get_children():
+                tree.delete(item)
+            
+            for c in compras:
+                fecha_corta = c[6][:16] if len(c[6]) > 16 else c[6]
+                tree.insert('', 'end', values=(
+                    c[0],
+                    c[1][:30],
+                    c[2],
+                    formatear_moneda(c[3]),
+                    formatear_moneda(c[4]),
+                    c[5][:20],
+                    fecha_corta
+                ))
+        except Exception as e:
+            print(f"Error al cargar compras: {e}")
+    
+    def iniciar_musica(self):
+        """Inicializa y reproduce la música de fondo automáticamente"""
+        try:
+            pygame.mixer.init()
+            music_path = os.path.join(os.path.dirname(__file__), "static", "audio", "medieval.mp3")
+            if os.path.exists(music_path):
+                pygame.mixer.music.load(music_path)
+                pygame.mixer.music.set_volume(0.3)  # Volumen al 30%
+                pygame.mixer.music.play(-1)  # -1 = loop infinito
+                self.musica_activa = True
+            else:
+                print("Archivo de música no encontrado:", music_path)
+        except Exception as e:
+            print(f"Error al iniciar música: {e}")
+    
+    def toggle_musica(self):
+        """Pausar/reanudar la música"""
+        if self.musica_activa:
+            pygame.mixer.music.pause()
+            self.btn_musica.configure(text="▶ Reproducir")
+            self.musica_activa = False
+        else:
+            pygame.mixer.music.unpause()
+            self.btn_musica.configure(text="⏸ Pausar")
+            self.musica_activa = True
+    
+    def iniciar_animaciones_navidad(self):
+        """Inicializa las animaciones navideñas"""
+        # Crear copos de nieve
+        for _ in range(50):
+            x = random.randint(0, 1600)
+            y = random.randint(-1000, 0)
+            velocidad = random.uniform(1, 3)
+            tamaño = random.randint(2, 5)
+            copo = self.canvas_fondo.create_oval(x, y, x+tamaño, y+tamaño, fill='white', outline='')
+            self.copos_nieve.append({'id': copo, 'x': x, 'y': y, 'velocidad': velocidad, 'tamaño': tamaño})
+        
+        # Dibujar árbol de navidad
+        self.dibujar_arbol_navidad()
+        
+        # Iniciar animaciones
+        self.animar_copos()
+        self.animar_luces_arbol()
+        self.animar_santa()
+    
+    def dibujar_arbol_navidad(self):
+        """Dibuja un árbol de navidad en la esquina inferior derecha"""
+        base_x, base_y = 1450, 800
+        
+        # Tronco
+        self.canvas_fondo.create_rectangle(base_x-15, base_y-50, base_x+15, base_y, fill='#8B4513', outline='')
+        
+        # Triángulos del árbol (3 niveles)
+        colores_verde = ['#0B6623', '#228B22', '#2E8B57']
+        tamaños = [(120, 100), (90, 80), (60, 60)]
+        y_offset = base_y - 50
+        
+        for i, (ancho, alto) in enumerate(tamaños):
+            points = [
+                base_x, y_offset - alto,  # punta
+                base_x - ancho//2, y_offset,  # izquierda
+                base_x + ancho//2, y_offset   # derecha
+            ]
+            self.canvas_fondo.create_polygon(points, fill=colores_verde[i], outline='')
+            y_offset -= alto * 0.7
+        
+        # Estrella en la punta
+        self.canvas_fondo.create_polygon(
+            base_x, y_offset-20,
+            base_x-8, y_offset-5,
+            base_x-15, y_offset,
+            base_x-5, y_offset+8,
+            base_x, y_offset+15,
+            base_x+5, y_offset+8,
+            base_x+15, y_offset,
+            base_x+8, y_offset-5,
+            fill='#FFD700', outline='#FFA500', width=2
+        )
+        
+        # Crear luces en el árbol
+        colores_luces = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF']
+        posiciones_luces = [
+            (base_x-50, base_y-80), (base_x+50, base_y-80),
+            (base_x-40, base_y-120), (base_x+40, base_y-120),
+            (base_x-30, base_y-160), (base_x+30, base_y-160),
+            (base_x-20, base_y-200), (base_x+20, base_y-200),
+        ]
+        
+        for i, (x, y) in enumerate(posiciones_luces):
+            color = colores_luces[i % len(colores_luces)]
+            luz = self.canvas_fondo.create_oval(x-4, y-4, x+4, y+4, fill=color, outline='white')
+            self.luces_arbol.append({'id': luz, 'color': color, 'x': x, 'y': y, 'encendida': True})
+    
+    def animar_copos(self):
+        """Anima los copos de nieve cayendo"""
+        for copo in self.copos_nieve:
+            copo['y'] += copo['velocidad']
+            
+            # Reiniciar copo si sale de la pantalla
+            if copo['y'] > 900:
+                copo['y'] = -10
+                copo['x'] = random.randint(0, 1600)
+            
+            # Actualizar posición
+            self.canvas_fondo.coords(copo['id'], copo['x'], copo['y'], 
+                                    copo['x']+copo['tamaño'], copo['y']+copo['tamaño'])
+        
+        # Repetir animación
+        self.root.after(30, self.animar_copos)
+    
+    def animar_luces_arbol(self):
+        """Anima las luces del árbol (parpadeo y cambio de color)"""
+        colores_luces = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#FFA500']
+        
+        for luz in self.luces_arbol:
+            # Parpadeo aleatorio
+            if random.random() < 0.1:
+                luz['encendida'] = not luz['encendida']
+                if luz['encendida']:
+                    # Cambiar color aleatoriamente
+                    luz['color'] = random.choice(colores_luces)
+                    self.canvas_fondo.itemconfig(luz['id'], fill=luz['color'], state='normal')
+                else:
+                    self.canvas_fondo.itemconfig(luz['id'], state='hidden')
+        
+        # Repetir animación
+        self.root.after(200, self.animar_luces_arbol)
+    
+    def animar_santa(self):
+        """Anima a Santa Claus pasando en su trineo"""
+        self.santa_contador += 1
+        
+        # Santa pasa cada 15 segundos (aproximadamente)
+        if self.santa_contador % 500 == 0:
+            self.santa_x = -200
+        
+        if self.santa_x < 1800:
+            # Limpiar Santa anterior
+            self.canvas_fondo.delete('santa')
+            
+            # Dibujar trineo
+            y_base = 150
+            self.canvas_fondo.create_arc(self.santa_x, y_base+20, self.santa_x+80, y_base+50, 
+                                        start=0, extent=180, fill='#8B4513', outline='#654321', 
+                                        width=2, tags='santa')
+            
+            # Dibujar Santa
+            # Cuerpo
+            self.canvas_fondo.create_oval(self.santa_x+20, y_base, self.santa_x+50, y_base+35, 
+                                         fill='#DC143C', outline='white', width=2, tags='santa')
+            # Cabeza
+            self.canvas_fondo.create_oval(self.santa_x+25, y_base-15, self.santa_x+45, y_base+5, 
+                                         fill='#FFE4C4', outline='', tags='santa')
+            # Gorro
+            self.canvas_fondo.create_polygon(self.santa_x+25, y_base-15, self.santa_x+45, y_base-15,
+                                            self.santa_x+50, y_base-25, fill='#DC143C', outline='white', 
+                                            width=2, tags='santa')
+            self.canvas_fondo.create_oval(self.santa_x+48, y_base-28, self.santa_x+55, y_base-22, 
+                                         fill='white', outline='', tags='santa')
+            
+            # Renos (simplificados)
+            for i in range(2):
+                rx = self.santa_x + 90 + (i * 40)
+                # Cuerpo reno
+                self.canvas_fondo.create_oval(rx, y_base+15, rx+25, y_base+35, 
+                                             fill='#8B4513', outline='', tags='santa')
+                # Cabeza
+                self.canvas_fondo.create_oval(rx+20, y_base+5, rx+35, y_base+20, 
+                                             fill='#A0522D', outline='', tags='santa')
+                # Astas
+                self.canvas_fondo.create_line(rx+25, y_base+5, rx+20, y_base-5, 
+                                             fill='#8B4513', width=2, tags='santa')
+                self.canvas_fondo.create_line(rx+30, y_base+5, rx+35, y_base-5, 
+                                             fill='#8B4513', width=2, tags='santa')
+            
+            # Estrellas mágicas detrás
+            for i in range(3):
+                sx = self.santa_x - 20 - (i * 15)
+                sy = y_base + random.randint(0, 30)
+                self.canvas_fondo.create_text(sx, sy, text='✨', font=('Arial', 16), 
+                                             fill='#FFD700', tags='santa')
+            
+            self.santa_x += 4
+        
+        # Repetir animación
+        self.root.after(30, self.animar_santa)
+    
     def run(self):
         self.root.mainloop()
 
 
 if __name__ == "__main__":
-    app = InvenBankApp()
+    app = WareIncApp()
     app.run()

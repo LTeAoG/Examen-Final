@@ -1,4 +1,4 @@
-# 💼 InvenBank Pro - Sistema de Inventario y Ventas v2.0
+# 💼 WareInc - Sistema de Inventario y Ventas v2.0
 
 Una moderna aplicación de escritorio profesional para gestionar inventario y ventas, diseñada con una interfaz inspirada en aplicaciones bancarias. Ahora con arquitectura modular y funcionalidades extendidas.
 

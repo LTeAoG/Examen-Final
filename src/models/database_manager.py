@@ -65,6 +65,21 @@ class DatabaseManager:
             )
         ''')
         
+        # Tabla de compras (registro de adquisiciones)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS compras (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                producto_id INTEGER NOT NULL,
+                producto_nombre TEXT NOT NULL,
+                cantidad INTEGER NOT NULL,
+                costo_unitario REAL NOT NULL,
+                total REAL NOT NULL,
+                proveedor TEXT,
+                fecha TEXT NOT NULL,
+                FOREIGN KEY (producto_id) REFERENCES productos(id)
+            )
+        ''')
+        
         # Tabla de presupuesto/capital
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS presupuesto (
@@ -87,7 +102,13 @@ class DatabaseManager:
             ('Hogar', 'Artículos para el hogar', '#F59E0B', '🏠'),
             ('Tecnología', 'Computadoras y accesorios', '#8B5CF6', '💻'),
             ('Deportes', 'Equipamiento deportivo', '#EF4444', '⚽'),
-            ('Libros', 'Libros y material educativo', '#06B6D4', '📚')
+            ('Libros', 'Libros y material educativo', '#06B6D4', '📚'),
+            ('Compras', 'Productos adquiridos de proveedores', '#EC4899', '🛒'),
+            ('Alimentos', 'Productos alimenticios', '#84CC16', '🍎'),
+            ('Ropa', 'Vestimenta y accesorios', '#F97316', '👕'),
+            ('Herramientas', 'Herramientas y equipos', '#64748B', '🔧'),
+            ('Juguetería', 'Juguetes y entretenimiento', '#A855F7', '🧸'),
+            ('Farmacia', 'Productos médicos y farmacéuticos', '#14B8A6', '💊')
         ]
         
         for nombre, desc, color, icono in categorias_default:
@@ -204,6 +225,12 @@ class DatabaseManager:
               nuevo_orden, fecha))
         
         producto_id = cursor.lastrowid
+        
+        # Registrar la compra en el historial
+        cursor.execute('''
+            INSERT INTO compras (producto_id, producto_nombre, cantidad, costo_unitario, total, proveedor, fecha)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (producto_id, nombre, cantidad, costo_compra, costo_total, 'Proveedor General', fecha))
         
         # Descontar del presupuesto
         cursor.execute('''
