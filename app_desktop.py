@@ -1340,7 +1340,7 @@ class WareIncApp:
         """Inicializa y reproduce la música de fondo automáticamente"""
         try:
             pygame.mixer.init()
-            music_path = os.path.join(os.path.dirname(__file__), "static", "audio", "medieval.mp3")
+            music_path = os.path.join(os.path.dirname(__file__), "assets", "medieval.mp3")
             if os.path.exists(music_path):
                 pygame.mixer.music.load(music_path)
                 pygame.mixer.music.set_volume(0.3)  # Volumen al 30%
@@ -1348,8 +1348,10 @@ class WareIncApp:
                 self.musica_activa = True
             else:
                 print("Archivo de música no encontrado:", music_path)
+                self.musica_activa = False
         except Exception as e:
             print(f"Error al iniciar música: {e}")
+            self.musica_activa = False
     
     def toggle_musica(self):
         """Pausar/reanudar la música"""
