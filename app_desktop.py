@@ -152,7 +152,7 @@ class WareIncApp:
         elif frame_name == "categorias":
             self.cargar_categorias()
         elif frame_name == "compras":
-            self.cargar_combo_productos_compra()
+            self.cargar_combo_categorias_compra()
             self.cargar_compras_recientes()
         elif frame_name == "historial":
             self.cargar_historial()
@@ -374,13 +374,29 @@ class WareIncApp:
         compra_form = ctk.CTkFrame(left, fg_color="transparent")
         compra_form.pack(fill="both", expand=True, padx=20, pady=10)
         
-        # Selector de producto
-        ctk.CTkLabel(compra_form, text="Producto a Comprar *", font=ctk.CTkFont(size=13),
+        # Nombre del producto
+        ctk.CTkLabel(compra_form, text="Nombre del Producto *", font=ctk.CTkFont(size=13),
                     text_color=COLORS['text_secondary']).pack(anchor="w", pady=(0, 5))
-        self.compra_producto = ctk.CTkComboBox(compra_form, values=["Cargando..."], height=42,
+        self.compra_nombre_producto = ctk.CTkEntry(compra_form, height=42, corner_radius=10, border_width=0,
+                                              fg_color=COLORS['bg_dark'], font=ctk.CTkFont(size=12),
+                                              placeholder_text="Nombre del producto")
+        self.compra_nombre_producto.pack(fill="x", pady=(0, 15))
+        
+        # Categoría
+        ctk.CTkLabel(compra_form, text="Categoría *", font=ctk.CTkFont(size=13),
+                    text_color=COLORS['text_secondary']).pack(anchor="w", pady=(0, 5))
+        self.compra_categoria = ctk.CTkComboBox(compra_form, values=["Cargando..."], height=42,
                                               corner_radius=10, border_width=0, fg_color=COLORS['bg_dark'],
                                               font=ctk.CTkFont(size=12), state="readonly")
-        self.compra_producto.pack(fill="x", pady=(0, 15))
+        self.compra_categoria.pack(fill="x", pady=(0, 15))
+        
+        # Precio de venta
+        ctk.CTkLabel(compra_form, text="Precio de Venta *", font=ctk.CTkFont(size=13),
+                    text_color=COLORS['text_secondary']).pack(anchor="w", pady=(0, 5))
+        self.compra_precio_venta = ctk.CTkEntry(compra_form, height=42, corner_radius=10, border_width=0,
+                                        fg_color=COLORS['bg_dark'], font=ctk.CTkFont(size=12),
+                                        placeholder_text="Precio de venta al público")
+        self.compra_precio_venta.pack(fill="x", pady=(0, 15))
         
         # Cantidad a comprar
         ctk.CTkLabel(compra_form, text="Cantidad *", font=ctk.CTkFont(size=13),
@@ -432,8 +448,8 @@ class WareIncApp:
         ctk.CTkLabel(right, text="Historial de Compras", font=ctk.CTkFont(size=18, weight="bold"),
                     text_color=COLORS['text_primary']).pack(anchor="w", padx=20, pady=15)
         
-        self.compras_tree = self.create_table(right, ["ID", "Producto", "Cant.", "Costo Unit.", "Total", "Proveedor", "Fecha"],
-                                             [40, 200, 60, 90, 90, 150, 150])
+        self.compras_tree = self.create_table(right, ["ID", "Producto", "Cantidad", "Costo Unit.", "Total", "Proveedor", "Fecha"],
+                                             [50, 180, 80, 100, 100, 140, 150])
     
     def create_ventas_frame(self):
         frame = ctk.CTkFrame(self.main_container, fg_color="transparent")
@@ -1122,19 +1138,19 @@ class WareIncApp:
         ctk.CTkButton(btns, text="✕ Cancelar", font=ctk.CTkFont(size=14, weight="bold"), height=45,
                      corner_radius=10, fg_color=COLORS['danger'], command=modal.destroy).pack(side="right", fill="x", expand=True, padx=(5, 0))
     
-    def cargar_combo_productos_compra(self):
-        """Carga los productos en el combo de compras"""
+    def cargar_combo_categorias_compra(self):
+        """Carga las categorías en el combo de compras"""
         try:
-            productos = self.db.obtener_productos()
-            nombres = [f"{p[1]}" for p in productos]
+            categorias = self.db.obtener_categorias()
+            nombres = [f"{c[4]} {c[1]}" if len(c) > 4 else c[1] for c in categorias]
             if nombres:
-                self.compra_producto.configure(values=nombres)
-                self.compra_producto.set(nombres[0])
+                self.compra_categoria.configure(values=nombres)
+                self.compra_categoria.set(nombres[0])
             else:
-                self.compra_producto.configure(values=["Sin productos"])
-                self.compra_producto.set("Sin productos")
+                self.compra_categoria.configure(values=["Sin categorías"])
+                self.compra_categoria.set("Sin categorías")
         except Exception as e:
-            print(f"Error al cargar combo compras: {e}")
+            print(f"Error al cargar combo categorías compras: {e}")
     
     def actualizar_total_compra(self, event=None):
         """Actualiza el total de la compra"""
@@ -1149,32 +1165,52 @@ class WareIncApp:
     def procesar_compra(self):
         """Procesa una compra de reposición de stock"""
         try:
-            producto_sel = self.compra_producto.get()
-            if not producto_sel or producto_sel == "Sin productos":
-                messagebox.showwarning("Advertencia", "Selecciona un producto")
+            nombre_producto = self.compra_nombre_producto.get().strip()
+            categoria_sel = self.compra_categoria.get()
+            precio_venta = self.compra_precio_venta.get().strip()
+            cantidad = self.compra_cantidad.get().strip()
+            costo_unitario = self.compra_costo.get().strip()
+            proveedor = self.compra_proveedor.get().strip() or "Proveedor General"
+            
+            # Validaciones
+            if not nombre_producto:
+                messagebox.showwarning("Advertencia", "Ingresa el nombre del producto")
                 return
             
-            cantidad = int(self.compra_cantidad.get())
-            costo_unitario = float(self.compra_costo.get())
-            proveedor = self.compra_proveedor.get().strip() or "Proveedor General"
+            if not categoria_sel or categoria_sel == "Cargando...":
+                messagebox.showwarning("Advertencia", "Selecciona una categoría")
+                return
+            
+            if not precio_venta:
+                messagebox.showwarning("Advertencia", "Ingresa el precio de venta")
+                return
+            
+            if not cantidad:
+                messagebox.showwarning("Advertencia", "Ingresa la cantidad")
+                return
+            
+            if not costo_unitario:
+                messagebox.showwarning("Advertencia", "Ingresa el costo unitario")
+                return
+            
+            try:
+                cantidad = int(cantidad)
+                precio_venta = float(precio_venta)
+                costo_unitario = float(costo_unitario)
+            except ValueError:
+                messagebox.showwarning("Advertencia", "Cantidad, precio y costo deben ser números válidos")
+                return
             
             if cantidad <= 0:
                 messagebox.showwarning("Advertencia", "La cantidad debe ser mayor a 0")
                 return
             
-            if costo_unitario <= 0:
-                messagebox.showwarning("Advertencia", "El costo debe ser mayor a 0")
+            if precio_venta <= 0:
+                messagebox.showwarning("Advertencia", "El precio de venta debe ser mayor a 0")
                 return
             
-            # Buscar el producto
-            producto_id = None
-            for p in self.productos:
-                if p[1] == producto_sel:
-                    producto_id = p[0]
-                    break
-            
-            if not producto_id:
-                messagebox.showerror("Error", "Producto no encontrado")
+            if costo_unitario <= 0:
+                messagebox.showwarning("Advertencia", "El costo debe ser mayor a 0")
                 return
             
             total = cantidad * costo_unitario
@@ -1185,22 +1221,54 @@ class WareIncApp:
                 messagebox.showerror("Error", f"Presupuesto insuficiente. Disponible: {formatear_moneda(capital)}, Necesario: {formatear_moneda(total)}")
                 return
             
-            # Registrar compra en historial
+            # Obtener ID de categoría
+            categoria_id = None
+            for c in self.categorias:
+                nombre_cat = f"{c[4]} {c[1]}" if len(c) > 4 else c[1]
+                if nombre_cat == categoria_sel:
+                    categoria_id = c[0]
+                    break
+            
+            if not categoria_id:
+                messagebox.showerror("Error", "Categoría no encontrada")
+                return
+            
+            # Verificar si el producto ya existe
+            productos = self.db.obtener_productos()
+            producto_existente = None
+            for p in productos:
+                if p[1].lower() == nombre_producto.lower():
+                    producto_existente = p
+                    break
+            
             fecha = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             conn = self.db.get_connection()
             cursor = conn.cursor()
             
+            if producto_existente:
+                # Actualizar producto existente
+                producto_id = producto_existente[0]
+                
+                # Actualizar stock y precio
+                cursor.execute('''
+                    UPDATE productos 
+                    SET cantidad = cantidad + ?, precio = ?, categoria_id = ?
+                    WHERE id = ?
+                ''', (cantidad, precio_venta, categoria_id, producto_id))
+            else:
+                # Crear nuevo producto
+                cursor.execute('''
+                    INSERT INTO productos (nombre, descripcion, precio, cantidad, categoria_id, fecha_creacion)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (nombre_producto, f"Producto agregado por compra", precio_venta, cantidad, categoria_id, fecha))
+                
+                producto_id = cursor.lastrowid
+            
+            # Registrar compra en historial
             cursor.execute('''
                 INSERT INTO compras (producto_id, producto_nombre, cantidad, costo_unitario, total, proveedor, fecha)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', (producto_id, producto_sel, cantidad, costo_unitario, total, proveedor, fecha))
-            
-            # Actualizar stock del producto
-            cursor.execute('''
-                UPDATE productos 
-                SET cantidad = cantidad + ?
-                WHERE id = ?
-            ''', (cantidad, producto_id))
+            ''', (producto_id, nombre_producto, cantidad, costo_unitario, total, proveedor, fecha))
             
             # Descontar del presupuesto
             cursor.execute('''
@@ -1212,9 +1280,12 @@ class WareIncApp:
             conn.commit()
             conn.close()
             
-            messagebox.showinfo("✅ Éxito", f"Compra realizada: {cantidad} unidades de {producto_sel}")
+            accion = "actualizado" if producto_existente else "creado y agregado"
+            messagebox.showinfo("Éxito", f"Producto {accion}: {cantidad} unidades de {nombre_producto}")
             
             # Limpiar formulario
+            self.compra_nombre_producto.delete(0, 'end')
+            self.compra_precio_venta.delete(0, 'end')
             self.compra_cantidad.delete(0, 'end')
             self.compra_costo.delete(0, 'end')
             self.compra_proveedor.delete(0, 'end')
@@ -1226,8 +1297,8 @@ class WareIncApp:
             self.cargar_combo_productos_venta()
             self.actualizar_dashboard()
             
-        except ValueError:
-            messagebox.showerror("Error", "Valores numéricos inválidos")
+        except ValueError as ve:
+            messagebox.showerror("Error", f"Valores numéricos inválidos: {str(ve)}")
         except Exception as e:
             messagebox.showerror("Error", f"Error al procesar compra: {str(e)}")
     
