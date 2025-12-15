@@ -650,7 +650,6 @@ class WareIncApp:
         self.cargar_productos()
         self.cargar_combo_categorias()
         self.cargar_combo_productos_venta()
-        self.cargar_combo_productos_compra()
         self.cargar_ventas_recientes()
         self.cargar_compras_recientes()
     
@@ -1347,11 +1346,16 @@ class WareIncApp:
                 pygame.mixer.music.play(-1)  # -1 = loop infinito
                 self.musica_activa = True
             else:
-                print("Archivo de música no encontrado:", music_path)
+                print("Archivo de música no encontrado, continuando sin música")
                 self.musica_activa = False
+                # Deshabilitar botón de música si no hay archivo
+                if hasattr(self, 'btn_musica'):
+                    self.btn_musica.configure(state="disabled", text="Sin música")
         except Exception as e:
             print(f"Error al iniciar música: {e}")
             self.musica_activa = False
+            if hasattr(self, 'btn_musica'):
+                self.btn_musica.configure(state="disabled", text="Sin música")
     
     def toggle_musica(self):
         """Pausar/reanudar la música"""
