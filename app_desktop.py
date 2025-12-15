@@ -62,9 +62,8 @@ class WareIncApp:
         title_frame = ctk.CTkFrame(self.sidebar, fg_color="transparent")
         title_frame.pack(pady=20, padx=15)
         
-        ctk.CTkLabel(title_frame, text="💼", font=ctk.CTkFont(size=36)).pack()
-        ctk.CTkLabel(title_frame, text="WareInc", font=ctk.CTkFont(size=18, weight="bold"), 
-                    text_color=COLORS['text_primary']).pack()
+        ctk.CTkLabel(title_frame, text="WareInc", font=ctk.CTkFont(size=22, weight="bold"), 
+                    text_color=COLORS['text_primary']).pack(pady=(10, 0))
         ctk.CTkLabel(title_frame, text="v2.0", font=ctk.CTkFont(size=10), 
                     text_color=COLORS['text_secondary']).pack()
         
@@ -72,10 +71,10 @@ class WareIncApp:
         music_frame = ctk.CTkFrame(self.sidebar, fg_color=COLORS['bg_card'], corner_radius=8)
         music_frame.pack(pady=10, padx=15, fill="x")
         
-        ctk.CTkLabel(music_frame, text="🎵 Música", font=ctk.CTkFont(size=11, weight="bold"),
+        ctk.CTkLabel(music_frame, text="Música", font=ctk.CTkFont(size=11, weight="bold"),
                     text_color=COLORS['text_primary']).pack(pady=(8, 4))
         
-        self.btn_musica = ctk.CTkButton(music_frame, text="⏸ Pausar", width=90, height=28,
+        self.btn_musica = ctk.CTkButton(music_frame, text="Pausar", width=90, height=28,
                                         fg_color=COLORS['primary'], hover_color=COLORS['secondary'],
                                         font=ctk.CTkFont(size=11),
                                         command=self.toggle_musica)
@@ -102,10 +101,11 @@ class WareIncApp:
         container_frame = ctk.CTkFrame(self.root, fg_color=COLORS['bg_dark'], corner_radius=0)
         container_frame.pack(side="right", fill="both", expand=True)
         
-        # Canvas de fondo para animaciones navideñas
+        # Canvas de fondo para animaciones navideñas (debe ir primero como fondo)
         self.canvas_fondo = Canvas(container_frame, bg=COLORS['bg_dark'], highlightthickness=0)
         self.canvas_fondo.place(x=0, y=0, relwidth=1, relheight=1)
         
+        # Main container (va encima del canvas)
         self.main_container = ctk.CTkScrollableFrame(container_frame, fg_color="transparent", corner_radius=0)
         self.main_container.place(x=0, y=0, relwidth=1, relheight=1)
         
@@ -151,6 +151,9 @@ class WareIncApp:
             self.cargar_productos()
         elif frame_name == "categorias":
             self.cargar_categorias()
+        elif frame_name == "compras":
+            self.cargar_combo_productos_compra()
+            self.cargar_compras_recientes()
         elif frame_name == "historial":
             self.cargar_historial()
         elif frame_name == "estadisticas":
@@ -168,10 +171,10 @@ class WareIncApp:
         
         self.stat_cards = {}
         stats = [
-            ("capital", "💰 Capital", "0", COLORS['accent']),
-            ("productos", "📦 Productos", "0", COLORS['secondary']),
-            ("ventas_hoy", "💵 Ventas Hoy", "0", COLORS['warning']),
-            ("ganancia", "📈 Ganancias", "0", COLORS['primary'])
+            ("capital", "Capital", "0", COLORS['accent']),
+            ("productos", "Productos", "0", COLORS['secondary']),
+            ("ventas_hoy", "Ventas Hoy", "0", COLORS['warning']),
+            ("ganancia", "Ganancias", "0", COLORS['primary'])
         ]
         
         for i, (key, titulo, valor, color) in enumerate(stats):
@@ -183,7 +186,7 @@ class WareIncApp:
         products_section = ctk.CTkFrame(frame, fg_color=COLORS['bg_card'], corner_radius=15)
         products_section.pack(fill="both", expand=True, padx=20, pady=5)
         
-        ctk.CTkLabel(products_section, text="⚠️ Stock Bajo", font=ctk.CTkFont(size=18, weight="bold"),
+        ctk.CTkLabel(products_section, text="Stock Bajo", font=ctk.CTkFont(size=18, weight="bold"),
                     text_color=COLORS['text_primary']).pack(anchor="w", padx=20, pady=15)
         
         self.bajo_stock_tree = self.create_table(products_section, ["ID", "Producto", "Stock", "Precio"], [50, 300, 80, 100])
@@ -264,7 +267,7 @@ class WareIncApp:
         table_header = ctk.CTkFrame(right, fg_color="transparent")
         table_header.pack(fill="x", padx=20, pady=15)
         
-        ctk.CTkLabel(table_header, text="📋 Inventario", font=ctk.CTkFont(size=18, weight="bold"),
+        ctk.CTkLabel(table_header, text="Inventario", font=ctk.CTkFont(size=18, weight="bold"),
                     text_color=COLORS['text_primary']).pack(side="left")
         
         # Filtros
@@ -343,7 +346,7 @@ class WareIncApp:
         right = ctk.CTkScrollableFrame(content, fg_color=COLORS['bg_card'], corner_radius=15)
         right.pack(side="right", fill="both", expand=True)
         
-        ctk.CTkLabel(right, text="📁 Categorías Creadas", font=ctk.CTkFont(size=18, weight="bold"),
+        ctk.CTkLabel(right, text="Categorías Creadas", font=ctk.CTkFont(size=18, weight="bold"),
                     text_color=COLORS['text_primary']).pack(anchor="w", padx=20, pady=15)
         
         self.categorias_tree = self.create_table(right, ["ID", "Icono", "Nombre", "Productos", "Acciones"],
@@ -414,7 +417,7 @@ class WareIncApp:
         self.compra_total_label.pack(pady=(0, 10))
         
         # Botones
-        ctk.CTkButton(compra_form, text="🛒 Realizar Compra", font=ctk.CTkFont(size=15, weight="bold"),
+        ctk.CTkButton(compra_form, text="Realizar Compra", font=ctk.CTkFont(size=15, weight="bold"),
                      height=50, corner_radius=10, fg_color=COLORS['primary'],
                      hover_color=COLORS['secondary'], command=self.procesar_compra).pack(fill="x", pady=5)
         
@@ -426,7 +429,7 @@ class WareIncApp:
         right = ctk.CTkScrollableFrame(content, fg_color=COLORS['bg_card'], corner_radius=15)
         right.pack(side="right", fill="both", expand=True)
         
-        ctk.CTkLabel(right, text="📋 Historial de Compras", font=ctk.CTkFont(size=18, weight="bold"),
+        ctk.CTkLabel(right, text="Historial de Compras", font=ctk.CTkFont(size=18, weight="bold"),
                     text_color=COLORS['text_primary']).pack(anchor="w", padx=20, pady=15)
         
         self.compras_tree = self.create_table(right, ["ID", "Producto", "Cant.", "Costo Unit.", "Total", "Proveedor", "Fecha"],
@@ -445,7 +448,7 @@ class WareIncApp:
         left = ctk.CTkFrame(content, fg_color=COLORS['bg_card'], corner_radius=15, width=450)
         left.pack(side="left", fill="both", expand=True, padx=(0, 15))
         
-        ctk.CTkLabel(left, text="🛒 Nueva Venta", font=ctk.CTkFont(size=20, weight="bold"),
+        ctk.CTkLabel(left, text="Nueva Venta", font=ctk.CTkFont(size=20, weight="bold"),
                     text_color=COLORS['text_primary']).pack(pady=20, padx=20, anchor="w")
         
         vform = ctk.CTkFrame(left, fg_color="transparent")
@@ -488,7 +491,7 @@ class WareIncApp:
         right.pack(side="right", fill="both", expand=True)
         right.pack_propagate(False)
         
-        ctk.CTkLabel(right, text="📊 Ventas Recientes", font=ctk.CTkFont(size=18, weight="bold"),
+        ctk.CTkLabel(right, text="Ventas Recientes", font=ctk.CTkFont(size=18, weight="bold"),
                     text_color=COLORS['text_primary']).pack(pady=20, padx=20, anchor="w")
         
         self.ventas_recientes_tree = self.create_table(right, ["Producto", "Cant.", "Total", "Hora"],
@@ -507,7 +510,7 @@ class WareIncApp:
         table_header = ctk.CTkFrame(content, fg_color="transparent")
         table_header.pack(fill="x", padx=20, pady=15)
         
-        ctk.CTkLabel(table_header, text="📜 Todas las Ventas", font=ctk.CTkFont(size=18, weight="bold"),
+        ctk.CTkLabel(table_header, text="Todas las Ventas", font=ctk.CTkFont(size=18, weight="bold"),
                     text_color=COLORS['text_primary']).pack(side="left")
         
         btns = ctk.CTkFrame(table_header, fg_color="transparent")
@@ -1281,19 +1284,33 @@ class WareIncApp:
         """Pausar/reanudar la música"""
         if self.musica_activa:
             pygame.mixer.music.pause()
-            self.btn_musica.configure(text="▶ Reproducir")
+            self.btn_musica.configure(text="Reproducir")
             self.musica_activa = False
         else:
             pygame.mixer.music.unpause()
-            self.btn_musica.configure(text="⏸ Pausar")
+            self.btn_musica.configure(text="Pausar")
             self.musica_activa = True
     
     def iniciar_animaciones_navidad(self):
         """Inicializa las animaciones navideñas"""
+        # Obtener dimensiones reales después de un pequeño delay
+        self.root.after(100, self._crear_animaciones)
+    
+    def _crear_animaciones(self):
+        """Crea las animaciones después de que el canvas tenga dimensiones"""
+        ancho = self.canvas_fondo.winfo_width()
+        alto = self.canvas_fondo.winfo_height()
+        
+        # Si aún no tiene dimensiones, usar valores por defecto
+        if ancho <= 1:
+            ancho = 1400
+        if alto <= 1:
+            alto = 900
+            
         # Crear copos de nieve
         for _ in range(50):
-            x = random.randint(0, 1600)
-            y = random.randint(-1000, 0)
+            x = random.randint(0, ancho)
+            y = random.randint(-alto, 0)
             velocidad = random.uniform(1, 3)
             tamaño = random.randint(2, 5)
             copo = self.canvas_fondo.create_oval(x, y, x+tamaño, y+tamaño, fill='white', outline='')
@@ -1309,7 +1326,14 @@ class WareIncApp:
     
     def dibujar_arbol_navidad(self):
         """Dibuja un árbol de navidad en la esquina inferior derecha"""
-        base_x, base_y = 1450, 800
+        ancho = self.canvas_fondo.winfo_width()
+        alto = self.canvas_fondo.winfo_height()
+        if ancho <= 1:
+            ancho = 1400
+        if alto <= 1:
+            alto = 900
+            
+        base_x, base_y = ancho - 150, alto - 100
         
         # Tronco
         self.canvas_fondo.create_rectangle(base_x-15, base_y-50, base_x+15, base_y, fill='#8B4513', outline='')
@@ -1357,13 +1381,21 @@ class WareIncApp:
     
     def animar_copos(self):
         """Anima los copos de nieve cayendo"""
+        ancho = self.canvas_fondo.winfo_width()
+        alto = self.canvas_fondo.winfo_height()
+        if ancho <= 1:
+            ancho = 1400
+        if alto <= 1:
+            alto = 900
+            
         for copo in self.copos_nieve:
+            # Actualizar posición
             copo['y'] += copo['velocidad']
             
-            # Reiniciar copo si sale de la pantalla
-            if copo['y'] > 900:
+            # Reiniciar si sale de la pantalla
+            if copo['y'] > alto:
                 copo['y'] = -10
-                copo['x'] = random.randint(0, 1600)
+                copo['x'] = random.randint(0, ancho)
             
             # Actualizar posición
             self.canvas_fondo.coords(copo['id'], copo['x'], copo['y'], 
@@ -1392,13 +1424,17 @@ class WareIncApp:
     
     def animar_santa(self):
         """Anima a Santa Claus pasando en su trineo"""
+        ancho = self.canvas_fondo.winfo_width()
+        if ancho <= 1:
+            ancho = 1400
+            
         self.santa_contador += 1
         
         # Santa pasa cada 15 segundos (aproximadamente)
         if self.santa_contador % 500 == 0:
             self.santa_x = -200
         
-        if self.santa_x < 1800:
+        if self.santa_x < ancho + 200:
             # Limpiar Santa anterior
             self.canvas_fondo.delete('santa')
             
@@ -1441,8 +1477,8 @@ class WareIncApp:
             for i in range(3):
                 sx = self.santa_x - 20 - (i * 15)
                 sy = y_base + random.randint(0, 30)
-                self.canvas_fondo.create_text(sx, sy, text='✨', font=('Arial', 16), 
-                                             fill='#FFD700', tags='santa')
+                self.canvas_fondo.create_oval(sx-3, sy-3, sx+3, sy+3, 
+                                             fill='#FFD700', outline='', tags='santa')
             
             self.santa_x += 4
         
